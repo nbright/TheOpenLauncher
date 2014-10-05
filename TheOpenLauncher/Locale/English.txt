@@ -1,0 +1,71 @@
+﻿#Main installer
+Installer.Title: ${applicationName} installation
+Installer.IntroInfo: [
+	Welcome to the installation of ${applicationName}
+    Please close as many other applications as possible to prevent
+    interference during the installation process.\n
+    Press 'Install' to install or pick 'Options' for custom installation settings.
+]
+Installer.OptionsButton: Options
+Installer.InstallButton: Install
+Installer.CancelButton: Cancel
+
+#Installer options
+Installer.Options.Title: Options
+Installer.Options.FolderLabel: Installation folder
+Installer.Options.FolderButton: Choose..
+Installer.Options.ShortcutsLabel: Shortcuts
+Installer.Options.DesktopShortcutLabel: Create desktop shortcut
+Installer.Options.StartMenuShortcutLabel: Create start menu entry
+Installer.Options.CancelButton: Cancel
+Installer.Options.SaveButton: Save
+
+#Installer finished
+Installer.Finish.Title: ${applicationName} has been installed
+Installer.Finish.InfoLabel: [
+	${applicationName} was succesfully installed.
+	Would you like to run it now?
+]
+Installer.Finish.CloseAndRun: Close and run
+Installer.Finish.Close: Close
+
+#Main updater
+Updater.Main.Title: ${applicationName} launcher
+Updater.Main.CheckingForUpdates: Checking for updates
+Updater.Main.RetrievingUpdateInfo: Retrieving update information
+Updater.Main.LaunchApplication: Launch application
+
+#Multiple updates available
+Updater.Multi.Title: Updates are available
+Updater.Multi.InfoLabel: [
+	Multiple updates for ${applicationName} have been released. 
+	Installing these updates is recommended for optimal security, 
+	stability and functionality.
+]
+Updater.Multi.NotesDropDownLabel: Show update notes for: 
+Updater.Multi.NotesPlaceholder: Loading notes...
+Updater.Multi.CancelButton: Cancel
+Updater.Multi.ApplyButton: Apply ${updateCount} updates
+
+#Single update available
+Updater.Single.Title: An update is available
+Updater.Single.InfoLabel: [
+	Update ${updateVersion} for ${applicationName} has been released. 
+	This update includes the following notes:
+]
+Updater.Single.NotesPlaceholder: Loading notes...
+Updater.Single.CancelButton: Cancel
+Updater.Single.ApplyButton: Apply update
+
+#Updater progress window
+Updater.Progress.Title: Update progress
+Updater.Progress.CancelButton: Cancel
+
+#Uninstaller
+Uninstaller.Title: ${applicationName} uninstallation
+Uninstaller.InfoLabel: [
+	Are you sure you want to remove ${applicationName} and 
+	all of its components from your computer?
+]
+Uninstaller.CancelButton: Cancel
+Uninstaller.RemoveButton: Remove
