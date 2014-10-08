@@ -263,7 +263,8 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
                      ControlStyles.ResizeRedraw |
                      ControlStyles.UserPaint, true);
             this.SelectedIndexChanged += MetroListBox_SelectedIndexChanged;
-            //InitializeComponent();
+            //InitializeComponent();         
+            this.Resize += (sender, e) => { ClampScroll(); };
         }
 
         void MetroListBox_SelectedIndexChanged(object sender, EventArgs e) {
@@ -320,7 +321,7 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
             Color foreColor = MetroPaint.ForeColor.Label.Normal(this.metroTheme);
             
             for (int i = 0; i < this.Items.Count;i++ ) {
-                int curY = i * ItemHeight;
+                int curY = (i * ItemHeight) - (ItemHeight * scrollY);
                 Rectangle itemRect = new Rectangle(0, curY, Width, ItemHeight);
                 Color textColor = foreColor;
 
@@ -531,6 +532,39 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
         {
             base.OnEnabledChanged(e);
             Invalidate();
+        }
+
+        private int scrollY;
+        protected override void WndProc(ref Message m) {
+            if (m.Msg == 0x115) { //WM_VSCROLL
+                int type = m.WParam.ToInt32() & 0xffff;
+                int value = m.WParam.ToInt32() >> 16;
+                if ((ScrollEventType)type == ScrollEventType.ThumbTrack) {
+                    scrollY = value;
+                }
+            } else if (m.Msg == 0x020A) { //WM_MOUSEWHEEL
+                int amount = m.WParam.ToInt32() >> 16;
+                int iDelta = (amount / -120) * 3; // (distance / -WHEEL_DELTA) * items_per_scroll
+                scrollY = scrollY + iDelta;
+                ClampScroll();
+            }
+            base.WndProc(ref m);
+        }
+
+        private void ClampScroll() {
+            int contentHeight = this.ItemHeight * this.Items.Count;
+            if (contentHeight == 0 || (this.Height / contentHeight) > 1) {
+                scrollY = 0;
+                return;
+            }
+
+            if (scrollY < 0) {
+                scrollY = 0;
+            }
+            int maxScroll = this.Items.Count - (this.Height / this.ItemHeight);
+            if (scrollY > maxScroll) {
+                scrollY = maxScroll;
+            }
         }
 
         #endregion
