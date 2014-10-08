@@ -20,8 +20,6 @@ namespace TheOpenLauncher
                 .OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", true)
                 .CreateSubKey(name);
             key.SetValue("DisplayName", LauncherSettings.ApplicationName);
-            key.SetValue("DisplayIcon", "TODO");
-            key.SetValue("DisplayVersion", "TODO");
             key.SetValue("InstallLocation", InstallationSettings.InstallationFolder);
             key.SetValue("Publisher", LauncherSettings.CompanyName);
             if(!String.IsNullOrEmpty(LauncherSettings.InfoURL)){ key.SetValue("URLInfoAbout", LauncherSettings.InfoURL);}

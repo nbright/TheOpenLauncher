@@ -16,14 +16,11 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
         }
 
         public void SetUpdateInfoPanel(UpdateInfo lastUpdate, UpdateInfo info) {
-            NumberFormatInfo formatInfo = new NumberFormatInfo();
-            formatInfo.NumberDecimalSeparator = ".";
-
             if (info.summary != null) {
                 summaryLabel.Text = info.summary;
-                versionLabel.Text = "Version " + info.version.ToString(formatInfo) + " - " + info.ReleaseDate.ToString("MMMM dd, yyyy");
+                versionLabel.Text = "Version " + VersionFormatter.ToString(info.version) + " - " + info.ReleaseDate.ToString("MMMM dd, yyyy");
             } else {
-                summaryLabel.Text = "Version " + info.version.ToString(formatInfo);
+                summaryLabel.Text = "Version " + VersionFormatter.ToString(info.version);
                 versionLabel.Text = "Released on " + info.ReleaseDate.ToString("MMMM dd, yyyy");
             }
 

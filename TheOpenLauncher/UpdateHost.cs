@@ -51,10 +51,7 @@ namespace TheOpenLauncher
         public Uri GetVersionFolderURL(AppInfo appInfo, double version) {
             UriBuilder uriBuilder = new UriBuilder(hostURL);
 
-            NumberFormatInfo nfi = new NumberFormatInfo();
-            nfi.NumberDecimalSeparator = ".";
-
-            uriBuilder.Path = uriBuilder.Path + '/' + appInfo.downloadBaseDir + '/' + version.ToString(nfi) + '/';
+            uriBuilder.Path = uriBuilder.Path + '/' + appInfo.downloadBaseDir + '/' + VersionFormatter.ToString(version) + '/';
             return uriBuilder.Uri;
         }
 

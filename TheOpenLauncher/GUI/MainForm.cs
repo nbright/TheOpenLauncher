@@ -24,7 +24,22 @@ namespace TheOpenLauncher
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            new Thread(StartUpdateCheck).Start();
+            bool folderIsReady = true;
+            
+            string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
+            if(File.Exists(lockFile) && !File.ReadAllText(lockFile).Contains("Incomplete")){
+                if (MessageBox.Show(this, "Another updater instance has locked the application directory. Force update?", "Updater already running", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Yes) {
+                    File.Delete(lockFile);
+                } else {
+                    folderIsReady = false;
+                }
+            }
+
+            if (folderIsReady) {
+                new Thread(StartUpdateCheck).Start();
+            } else {
+                this.Close();
+            }
         }
 
         private double[] GetUpdatedVersions(AppInfo info, double currentVersion, double targetVersion) {
@@ -68,11 +83,8 @@ namespace TheOpenLauncher
                         this.Hide();
                         form.ShowDialog();
                     }
-                    else
-                    {
-                        progressLabel.Text = LauncherLocale.Current.Get("Updater.Main.LaunchApplication");
-                        Program.LaunchTargetApplication(this);
-                    }
+                    progressLabel.Text = LauncherLocale.Current.Get("Updater.Main.LaunchApplication");
+                    Program.LaunchTargetApplication(this);
                     this.Close();
                 }));
             });

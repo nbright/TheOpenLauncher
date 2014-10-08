@@ -34,7 +34,7 @@
             this.updateButton = new MetroFramework.Controls.MetroButton();
             this.updateNotesPanel = new MetroFramework.Controls.MetroPanel();
             this.detailsTextBox = new MetroFramework.Controls.MetroTextBox();
-            this.metroComboBox1 = new MetroFramework.Controls.MetroComboBox();
+            this.updateNotesComboBox = new MetroFramework.Controls.MetroComboBox();
             this.updateNotesDropdownLabel = new MetroFramework.Controls.MetroLabel();
             this.updateNotesPanel.SuspendLayout();
             this.SuspendLayout();
@@ -61,6 +61,7 @@
             // 
             // updateButton
             // 
+            this.updateButton.Enabled = false;
             this.updateButton.FontSize = MetroFramework.MetroButtonSize.Medium;
             this.updateButton.Highlight = true;
             this.updateButton.Location = new System.Drawing.Point(285, 298);
@@ -74,7 +75,7 @@
             // updateNotesPanel
             // 
             this.updateNotesPanel.Controls.Add(this.detailsTextBox);
-            this.updateNotesPanel.Controls.Add(this.metroComboBox1);
+            this.updateNotesPanel.Controls.Add(this.updateNotesComboBox);
             this.updateNotesPanel.Controls.Add(this.updateNotesDropdownLabel);
             this.updateNotesPanel.HorizontalScrollbarBarColor = true;
             this.updateNotesPanel.HorizontalScrollbarHighlightOnWheel = false;
@@ -87,14 +88,14 @@
             this.updateNotesPanel.VerticalScrollbarHighlightOnWheel = false;
             this.updateNotesPanel.VerticalScrollbarSize = 10;
             // 
-            // detailsTextbox
+            // detailsTextBox
             // 
             this.detailsTextBox.Lines = new string[] {
         "Loading notes..."};
             this.detailsTextBox.Location = new System.Drawing.Point(4, 36);
             this.detailsTextBox.MaxLength = 32767;
             this.detailsTextBox.Multiline = true;
-            this.detailsTextBox.Name = "detailsTextbox";
+            this.detailsTextBox.Name = "detailsTextBox";
             this.detailsTextBox.PasswordChar = '\0';
             this.detailsTextBox.ReadOnly = true;
             this.detailsTextBox.ScrollBars = System.Windows.Forms.ScrollBars.None;
@@ -104,16 +105,16 @@
             this.detailsTextBox.Text = "Loading notes...";
             this.detailsTextBox.UseSelectable = true;
             // 
-            // metroComboBox1
+            // updateNotesComboBox
             // 
-            this.metroComboBox1.FormattingEnabled = true;
-            this.metroComboBox1.ItemHeight = 23;
-            this.metroComboBox1.Location = new System.Drawing.Point(155, 1);
-            this.metroComboBox1.Name = "metroComboBox1";
-            this.metroComboBox1.Size = new System.Drawing.Size(234, 29);
-            this.metroComboBox1.TabIndex = 3;
-            this.metroComboBox1.UseSelectable = true;
-            this.metroComboBox1.SelectedIndexChanged += new System.EventHandler(this.metroComboBox1_SelectedIndexChanged);
+            this.updateNotesComboBox.FormattingEnabled = true;
+            this.updateNotesComboBox.ItemHeight = 23;
+            this.updateNotesComboBox.Location = new System.Drawing.Point(155, 1);
+            this.updateNotesComboBox.Name = "updateNotesComboBox";
+            this.updateNotesComboBox.Size = new System.Drawing.Size(234, 29);
+            this.updateNotesComboBox.TabIndex = 3;
+            this.updateNotesComboBox.UseSelectable = true;
+            this.updateNotesComboBox.SelectedIndexChanged += new System.EventHandler(this.updateNotesCombobox_SelectedIndexChanged);
             // 
             // updateNotesDropdownLabel
             // 
@@ -136,6 +137,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MultiUpdateDetailsForm";
             this.Text = "Updates are available";
+            this.Load += new System.EventHandler(this.MultiUpdateDetailsForm_Load);
             this.updateNotesPanel.ResumeLayout(false);
             this.updateNotesPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -149,7 +151,7 @@
         private MetroFramework.Controls.MetroButton cancelButton;
         private MetroFramework.Controls.MetroButton updateButton;
         private MetroFramework.Controls.MetroPanel updateNotesPanel;
-        private MetroFramework.Controls.MetroComboBox metroComboBox1;
+        private MetroFramework.Controls.MetroComboBox updateNotesComboBox;
         private MetroFramework.Controls.MetroLabel updateNotesDropdownLabel;
         private MetroFramework.Controls.MetroTextBox detailsTextBox;
     }

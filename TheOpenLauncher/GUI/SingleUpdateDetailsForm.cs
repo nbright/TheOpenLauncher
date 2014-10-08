@@ -38,9 +38,7 @@ namespace TheOpenLauncher
             this.updateInfo = info;
             this.detailsTextBox.Text = info.changeLog;
             this.infoLabel.Text = LauncherLocale.Current.Get("Updater.Single.InfoLabel");
-            NumberFormatInfo nfi = new NumberFormatInfo();
-            nfi.NumberDecimalSeparator = ".";
-            this.infoLabel.Text = this.infoLabel.Text.Replace("${updateVersion}", info.version.ToString(nfi));
+            this.infoLabel.Text = this.infoLabel.Text.Replace("${updateVersion}", VersionFormatter.ToString(info.version));
         }
 
         private void UpdateForm_Load(object sender, EventArgs e)
@@ -58,18 +56,18 @@ namespace TheOpenLauncher
         private void updateButton_Click(object sender, EventArgs e)
         {
             UpdateProgressWindow progressWindow = new UpdateProgressWindow(updater);
-            progressWindow.SetProgress(10, "Applying update");
             progressWindow.Show();
-            this.Hide();
+            progressWindow.SetProgress(10, "Applying update");
+            //this.Hide();
             new Thread(() => {
                 updater.ApplyUpdate(appInfo, updateInfo, updateHost);
+                this.Invoke((Action)(() => { this.Close(); }));
             }).Start();
-            this.Close();
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            this.Close();
         }
     }
 }

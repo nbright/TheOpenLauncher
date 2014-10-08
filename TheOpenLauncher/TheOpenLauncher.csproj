@@ -137,6 +137,7 @@
     <Compile Include="FileIndex.cs" />
     <Compile Include="UpdateInfo.cs" />
     <Compile Include="Updater.cs" />
+    <Compile Include="VersionFormatter.cs" />
     <EmbeddedResource Include="GUI\InstallationFinishedForm.resx">
       <DependentUpon>InstallationFinishedForm.cs</DependentUpon>
     </EmbeddedResource>

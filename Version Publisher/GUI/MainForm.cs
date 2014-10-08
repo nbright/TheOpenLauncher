@@ -81,9 +81,7 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
             UpdateInfo[] updates = new UpdateInfo[info.versions.Length];
             for(int i = 0;i<info.versions.Length;i++){
                 double cur = info.versions[i];
-                NumberFormatInfo formatInfo = new NumberFormatInfo();
-                formatInfo.NumberDecimalSeparator = ".";
-                string curVersionFolder = Path.Combine(versionsFolder, cur.ToString(formatInfo));
+                string curVersionFolder = Path.Combine(versionsFolder, VersionFormatter.ToString(cur));
                 string infoFile = Path.Combine(curVersionFolder, "info.json");
                 updates[i] = UpdateInfo.FromJson(File.ReadAllText(infoFile));
             }

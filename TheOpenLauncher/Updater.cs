@@ -36,8 +36,21 @@ namespace TheOpenLauncher {
             updateInfoHelper.RetrieveUpdateInfo(appInfo, appInfoSource, version, callback);
         }
 
+        public void RetrieveUpdateInfos(AppInfo appInfo, UpdateHost appInfoSource, double[] version, Action<UpdateInfo, UpdateHost, int> callback) {
+            updateInfoHelper.RetrieveUpdateInfos(appInfo, appInfoSource, version, callback);
+        }
+
         public void ApplyUpdate(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource) {
+            string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
+            if (File.Exists(lockFile)) {
+                throw new Exception("Could not update: the application folder is already locked by another updater instance.");
+            } else {
+                File.Create(lockFile).Close();
+            }
+            
             FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
+
+            //Update/delete existing files
             for(int i = 0;i<index.files.Count;i++) {
                 ProgressChangedEventHandler eventDelegate = ProgressChanged;
                 if (eventDelegate != null) {
@@ -67,6 +80,7 @@ namespace TheOpenLauncher {
                 }
             }
 
+            //Install new files
             for(int i = 0; i < info.fileChecksums.Keys.Count; i++){
                 ProgressChangedEventHandler eventDelegate = ProgressChanged;
                 if (eventDelegate != null) {
@@ -100,6 +114,7 @@ namespace TheOpenLauncher {
             index.applicationVersion = info.version;
             index.files.AddRange(info.fileChecksums.Keys);
             index.Serialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
+            File.Delete(lockFile);
         }
 
         private class AppInfoHelper {
@@ -156,36 +171,84 @@ namespace TheOpenLauncher {
 
         private class UpdateInfoHelper {
             private WebClient client = new WebClient();
-            private List<Action<UpdateInfo, UpdateHost>> updateInfoCallbacks = new List<Action<UpdateInfo, UpdateHost>>(); //TODO: list is messy solution, needs rewrite
+
+            public UpdateInfoHelper() {
+                client.DownloadStringCompleted += client_DownloadStringCompleted;
+            }
 
             public void RetrieveUpdateInfo(AppInfo appInfo, UpdateHost appInfoSource, double version, Action<UpdateInfo, UpdateHost> callback) {
-                client.DownloadStringCompleted += client_DownloadStringCompleted;
-                updateInfoCallbacks.Add(callback);
-                client.DownloadStringAsync(appInfoSource.GetVersionInfoURL(appInfo, version), new Object[] { appInfoSource, version });
+                if (client.IsBusy) {
+                    throw new Exception("Cannot execute multiple updateinfo requests at once.");
+                }
+                client.DownloadStringAsync(appInfoSource.GetVersionInfoURL(appInfo, version), new UpdateInfoDownloadHelper(callback, appInfoSource, version ));
+            }
+
+            public void RetrieveUpdateInfos(AppInfo appInfo, UpdateHost appInfoSource, double[] versions, Action<UpdateInfo, UpdateHost, int> callback) {
+                if (client.IsBusy) {
+                    throw new Exception("Cannot execute multiple updateinfo requests at once.");
+                }
+                for (int i = 0; i < versions.Length;i++ ) {
+                    WebClient curClient = new WebClient();
+                    curClient.DownloadStringCompleted += client_DownloadStringCompleted;
+                    curClient.DownloadStringAsync(appInfoSource.GetVersionInfoURL(appInfo, versions[i]), new UpdateInfoDownloadHelper(callback, appInfoSource, versions, i));
+                }
             }
 
             private void client_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e) {
-                UpdateHost appInfoSource = (UpdateHost)((object[])e.UserState)[0];
-                double version = (double)((object[])e.UserState)[1];
+                UpdateInfoDownloadHelper helper = (UpdateInfoDownloadHelper)e.UserState;
 
                 if (e.Error != null) {
-                    InvokeUpdateInfoCallbacksAndClear(null, null);
+                    helper.InvokeCallback(null, null);
                 } else {
                     UpdateInfo info = UpdateInfo.FromJson(e.Result);
                     if (info == null) {
-                        InvokeUpdateInfoCallbacksAndClear(null, null);
+                        helper.InvokeCallback(null, null);
                         return;
                     }
-                    info.version = version;
-                    InvokeUpdateInfoCallbacksAndClear(info, appInfoSource);
+                    info.version = helper.Version;
+                    helper.InvokeCallback(info, helper.appInfoSource);
                 }
             }
 
-            private void InvokeUpdateInfoCallbacksAndClear(UpdateInfo result, UpdateHost uri) {
-                foreach (Action<UpdateInfo, UpdateHost> callback in updateInfoCallbacks) {
-                    callback.Invoke(result, uri);
+            private class UpdateInfoDownloadHelper {
+                public Action<UpdateInfo, UpdateHost> singleUpdateCallback;
+                public Action<UpdateInfo, UpdateHost, int> multiUpdateCallback;
+                public UpdateHost appInfoSource;
+                public double[] versions;
+                public int index;
+
+                public UpdateInfoDownloadHelper(Action<UpdateInfo, UpdateHost> callback, UpdateHost appInfoSource, double version) {
+                    this.singleUpdateCallback = callback;
+                    this.appInfoSource = appInfoSource;
+                    this.versions = new double[] { version };
                 }
-                updateInfoCallbacks.Clear();
+
+                public UpdateInfoDownloadHelper(Action<UpdateInfo, UpdateHost, int> callback, UpdateHost appInfoSource, double[] version, int i) {
+                    this.multiUpdateCallback = callback;
+                    this.appInfoSource = appInfoSource;
+                    this.versions = version;
+                    this.index = i;
+                }
+
+                public bool IsSingleUpdate{
+                    get {
+                        return singleUpdateCallback != null;
+                    }
+                }
+
+                public double Version {
+                    get {
+                        return versions[index];
+                    }
+                }
+
+                public void InvokeCallback(UpdateInfo info, UpdateHost source) {
+                    if (IsSingleUpdate) {
+                        singleUpdateCallback.Invoke(info, source);
+                    } else {
+                        multiUpdateCallback.Invoke(info, source, index);
+                    }
+                }
             }
         }
     }

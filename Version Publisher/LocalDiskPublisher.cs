@@ -43,9 +43,7 @@ namespace TheOpenLauncher.VersionPublisher {
         }
 
         public override void PublishUpdate(Project project, UpdateInfo newUpdate) {
-            NumberFormatInfo format = new NumberFormatInfo();
-            format.NumberDecimalSeparator = ".";
-            string updateVersion = newUpdate.version.ToString(format);
+            string updateVersion = VersionFormatter.ToString(newUpdate.version);
 
             AppInfo appInfo;
             string appInfoFile = Path.Combine(targetFolder, "appinfo.json");

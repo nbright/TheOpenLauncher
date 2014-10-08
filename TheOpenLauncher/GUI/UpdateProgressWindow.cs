@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -17,17 +18,27 @@ namespace TheOpenLauncher
         {
             InitializeComponent();
             this.updater = updater;
+            this.Text = LauncherLocale.Current.Get("Updater.Progress.Title");
+            cancelButton.Text = LauncherLocale.Current.Get("Updater.Progress.CancelButton");
+            HandleCreated += UpdateProgressWindow_HandleCreated;
+        }
+
+        void UpdateProgressWindow_HandleCreated(object sender, EventArgs e) {
             updater.ProgressChanged += (source, eventInfo) => {
                 this.SetProgress(eventInfo.PercentageDone, eventInfo.CurrentAction);
             };
-
-            this.Text = LauncherLocale.Current.Get("Updater.Progress.Title");
-            cancelButton.Text = LauncherLocale.Current.Get("Updater.Progress.CancelButton");
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            if(MessageBox.Show(this, "Cancelling the update will leave the application in a semi-updated state. Before the application can run, it must be either fully updated or reïnstalled. Are you sure want to cancel?",
+                "Cancel update?", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == System.Windows.Forms.DialogResult.Yes) {
+                    string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
+                    if(File.Exists(lockFile)){
+                        File.WriteAllText(lockFile, "Incomplete");
+                    }
+                    Application.Exit();
+            }
         }
 
         public void SetProgress(int progressBarValue, string currentAction)

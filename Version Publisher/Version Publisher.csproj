@@ -138,6 +138,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="DateTools.cs" />
     <Compile Include="UpdateInfo.cs" />
+    <Compile Include="VersionFormatter.cs" />
     <Content Include="logoBlue.ico" />
     <EmbeddedResource Include="GUI\NewProjectDialog.resx">
       <DependentUpon>NewProjectDialog.cs</DependentUpon>

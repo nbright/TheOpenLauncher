@@ -10,14 +10,14 @@ namespace TheOpenLauncher
     {
         public static string ApplicationName = "ExampleApplication";
         public static string CompanyName = "Example Inc.";
-        public static string TargetExecutable = "myapp.exe";  //Updater will run this
+        public static string TargetExecutable = "vlc.exe";//"myapp.exe";  //Updater will run this
         public static string UpdaterExecutable = "myappUpdater.exe"; //Links to program run this.
         public static string[] UpdateURLs = new String[]{
             "http://www.example.com/updater",
             "http://mycompany.net/myapp/updater/",
-            "https://dl.dropboxusercontent.com/u/35774053/jskyrim/updater/"
+            "https://dl.dropboxusercontent.com/u/35774053/ExampleProject/"
         };
-        public static string AppID = CompanyName+"/"+ApplicationName;
+        public static string AppID = "YourCompany/ExampleProject";//CompanyName+"/"+ApplicationName;
 
         public static string InfoURL = null;
         public static string HelpURL = null;

@@ -61,9 +61,7 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
             updates = updatesUnsorted.OrderByDescending(update => update.version);
             foreach(UpdateInfo cur in updates){
                 if(cur.summary == null){
-                    NumberFormatInfo nfi = new NumberFormatInfo();
-                    nfi.NumberDecimalSeparator = ".";
-                    updatesList.Items.Add("Version " + cur.version.ToString(nfi));
+                    updatesList.Items.Add("Version " + VersionFormatter.ToString(cur.version));
                 } else {
                     updatesList.Items.Add(cur.summary);
                 }

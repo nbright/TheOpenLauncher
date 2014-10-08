@@ -34,9 +34,7 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
 
         private void publishUpdateButton_Click(object sender, EventArgs e) {
             newUpdateInfo.summary = summaryTextBox.Text;
-            NumberFormatInfo info = new NumberFormatInfo();
-            info.CurrencyDecimalSeparator = ".";
-            newUpdateInfo.version = Double.Parse(versionTextBox.Text, info);
+            newUpdateInfo.version = VersionFormatter.FromString(versionTextBox.Text);
             newUpdateInfo.changeLog = newNotesTextBox.Text;
             newUpdateInfo.ReleaseDate = DateTime.UtcNow;
 
@@ -54,18 +52,14 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
         }
 
         public void LoadUpdateChanges() {
-            NumberFormatInfo info = new NumberFormatInfo();
-            info.NumberDecimalSeparator = ".";
-            versionTextBox.Text = GetNextVersionNumber().ToString(".################", info);
+            versionTextBox.Text = VersionFormatter.ToString(GetNextVersionNumber());
         }
 
         private int GetDecimalPlaces(double argument) {
             if (Math.Floor(argument) == argument) {
                 return 0;
             }
-            NumberFormatInfo info = new NumberFormatInfo();
-            info.NumberDecimalSeparator = ".";
-            string numberString = argument.ToString(".################", info);
+            string numberString = VersionFormatter.ToString(argument);
             return numberString.Substring(numberString.IndexOf(".") + 1).Length;
         }
 
@@ -75,9 +69,7 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
                 resultString = resultString + "0";
             }
             resultString = resultString + "1";
-            NumberFormatInfo info = new NumberFormatInfo();
-            info.NumberDecimalSeparator = ".";
-            return Double.Parse(resultString, info);
+            return VersionFormatter.FromString(resultString);
         }
 
         private double GetNextVersionNumber() {
