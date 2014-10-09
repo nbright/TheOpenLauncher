@@ -263,7 +263,6 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
                      ControlStyles.ResizeRedraw |
                      ControlStyles.UserPaint, true);
             this.SelectedIndexChanged += MetroListBox_SelectedIndexChanged;
-            //InitializeComponent();         
             this.Resize += (sender, e) => { ClampScroll(); };
         }
 
