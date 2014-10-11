@@ -23,20 +23,24 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
             TheOpenLauncher.VersionPublisher.GUI.MetroListBox.ListIcon listIcon1 = new TheOpenLauncher.VersionPublisher.GUI.MetroListBox.ListIcon();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuSeperator = new TheOpenLauncher.VersionPublisher.GUI.MetroSeperator();
             this.pageList = new TheOpenLauncher.VersionPublisher.GUI.MetroListBox();
             this.tablessTabControl = new TheOpenLauncher.VersionPublisher.GUI.TablessTabControl();
             this.mainPage = new System.Windows.Forms.TabPage();
             this.infoLabel = new MetroFramework.Controls.MetroLabel();
             this.loadProjectButton = new MetroFramework.Controls.MetroButton();
             this.newProjectButton = new MetroFramework.Controls.MetroButton();
-            this.menuSeperator = new TheOpenLauncher.VersionPublisher.GUI.MetroSeperator();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
+            this.contextMenu.SuspendLayout();
             this.tablessTabControl.SuspendLayout();
             this.mainPage.SuspendLayout();
             this.SuspendLayout();
@@ -66,9 +70,39 @@
             this.splitContainer.TabStop = false;
             this.splitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
             // 
+            // contextMenu
+            // 
+            this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.propertiesToolStripMenuItem});
+            this.contextMenu.Name = "contextMenuStrip1";
+            this.contextMenu.Size = new System.Drawing.Size(153, 48);
+            // 
+            // propertiesToolStripMenuItem
+            // 
+            this.propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
+            this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.propertiesToolStripMenuItem.Text = "Properties";
+            this.propertiesToolStripMenuItem.Click += new System.EventHandler(this.propertiesToolStripMenuItem_Click);
+            // 
+            // menuSeperator
+            // 
+            this.menuSeperator.BackColor = System.Drawing.Color.Transparent;
+            this.menuSeperator.FadeLenght = 15;
+            this.menuSeperator.FadesIn = true;
+            this.menuSeperator.FadesOut = true;
+            this.menuSeperator.IgnoreInputEvents = true;
+            this.menuSeperator.LineColor = System.Drawing.SystemColors.Control;
+            this.menuSeperator.Location = new System.Drawing.Point(192, 52);
+            this.menuSeperator.Name = "menuSeperator";
+            this.menuSeperator.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.menuSeperator.Size = new System.Drawing.Size(2, 569);
+            this.menuSeperator.TabIndex = 3;
+            this.menuSeperator.TabStop = false;
+            // 
             // pageList
             // 
             this.pageList.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.pageList.ContextMenuStrip = this.contextMenu;
             this.pageList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pageList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.pageList.DrawSeperator = false;
@@ -146,21 +180,6 @@
             this.newProjectButton.UseSelectable = true;
             this.newProjectButton.Click += new System.EventHandler(this.newProjectButton_Click);
             // 
-            // menuSeperator
-            // 
-            this.menuSeperator.BackColor = System.Drawing.Color.Transparent;
-            this.menuSeperator.FadeLenght = 15;
-            this.menuSeperator.FadesIn = true;
-            this.menuSeperator.FadesOut = true;
-            this.menuSeperator.IgnoreInputEvents = true;
-            this.menuSeperator.LineColor = System.Drawing.SystemColors.Control;
-            this.menuSeperator.Location = new System.Drawing.Point(192, 52);
-            this.menuSeperator.Name = "menuSeperator";
-            this.menuSeperator.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.menuSeperator.Size = new System.Drawing.Size(2, 569);
-            this.menuSeperator.TabIndex = 3;
-            this.menuSeperator.TabStop = false;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -176,6 +195,7 @@
             this.splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
+            this.contextMenu.ResumeLayout(false);
             this.tablessTabControl.ResumeLayout(false);
             this.mainPage.ResumeLayout(false);
             this.mainPage.PerformLayout();
@@ -193,6 +213,8 @@
         private MetroFramework.Controls.MetroButton newProjectButton;
         private MetroFramework.Controls.MetroButton loadProjectButton;
         private GUI.MetroSeperator menuSeperator;
+        private System.Windows.Forms.ContextMenuStrip contextMenu;
+        private System.Windows.Forms.ToolStripMenuItem propertiesToolStripMenuItem;
 
 
     }

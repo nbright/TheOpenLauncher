@@ -26,6 +26,10 @@ namespace TheOpenLauncher.VersionPublisher {
             info.AddValue("targetFolder", targetFolder);
         }
 
+        public override string ToString() {
+            return this.GetType().Name + "{ targetFolder = '" + targetFolder + "' }";
+        }
+
         #region Publishing
         private void CopyAllInFolder(string sourceFolder, string destinationFolder) {
             DirectoryInfo source_dir = new DirectoryInfo(sourceFolder);

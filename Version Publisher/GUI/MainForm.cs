@@ -122,5 +122,19 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
                 }
             }
         }
+
+        private void propertiesToolStripMenuItem_Click(object sender, EventArgs e) {
+            if(this.pageList.SelectedIndex <= 0){
+                return;
+            }
+            ProjectPage page = (ProjectPage)this.tablessTabControl.SelectedTab.Controls[0];
+            Project project = page.Project;
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("Project name: " + project.Name);
+            builder.AppendLine("AppID: " + project.AppID);
+            builder.AppendLine("Project folder: " + project.ProjectFolder);
+            builder.AppendLine("Publisher: " + project.publisher.ToString());
+            MessageBox.Show(builder.ToString(), "Project info");
+        }
     }
 }
