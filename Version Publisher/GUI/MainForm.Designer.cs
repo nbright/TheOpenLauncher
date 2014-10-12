@@ -29,6 +29,7 @@
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.closeProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuSeperator = new TheOpenLauncher.VersionPublisher.GUI.MetroSeperator();
             this.pageList = new TheOpenLauncher.VersionPublisher.GUI.MetroListBox();
             this.tablessTabControl = new TheOpenLauncher.VersionPublisher.GUI.TablessTabControl();
@@ -73,9 +74,10 @@
             // contextMenu
             // 
             this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.propertiesToolStripMenuItem});
+            this.propertiesToolStripMenuItem,
+            this.closeProjectToolStripMenuItem});
             this.contextMenu.Name = "contextMenuStrip1";
-            this.contextMenu.Size = new System.Drawing.Size(153, 48);
+            this.contextMenu.Size = new System.Drawing.Size(153, 70);
             // 
             // propertiesToolStripMenuItem
             // 
@@ -83,6 +85,13 @@
             this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.propertiesToolStripMenuItem.Text = "Properties";
             this.propertiesToolStripMenuItem.Click += new System.EventHandler(this.propertiesToolStripMenuItem_Click);
+            // 
+            // closeProjectToolStripMenuItem
+            // 
+            this.closeProjectToolStripMenuItem.Name = "closeProjectToolStripMenuItem";
+            this.closeProjectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.closeProjectToolStripMenuItem.Text = "Close project";
+            this.closeProjectToolStripMenuItem.Click += new System.EventHandler(this.closeProjectToolStripMenuItem_Click);
             // 
             // menuSeperator
             // 
@@ -102,7 +111,6 @@
             // pageList
             // 
             this.pageList.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.pageList.ContextMenuStrip = this.contextMenu;
             this.pageList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pageList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.pageList.DrawSeperator = false;
@@ -123,6 +131,7 @@
             this.pageList.UseCustomForeColor = true;
             this.pageList.UseSelectable = true;
             this.pageList.SelectedValueChanged += new System.EventHandler(this.pageList_SelectedValueChanged);
+            this.pageList.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pageList_MouseDown);
             // 
             // tablessTabControl
             // 
@@ -215,6 +224,7 @@
         private GUI.MetroSeperator menuSeperator;
         private System.Windows.Forms.ContextMenuStrip contextMenu;
         private System.Windows.Forms.ToolStripMenuItem propertiesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem closeProjectToolStripMenuItem;
 
 
     }

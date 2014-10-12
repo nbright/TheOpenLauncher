@@ -53,6 +53,22 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
             return this.tablessTabControl.TabPages.Count - 1;
         }
 
+        public void CloseProject(Project project) {
+            for (int i = 0; i < tablessTabControl.TabCount; i++) {
+                if (this.tablessTabControl.TabPages[i].Controls[0] is ProjectPage) {
+                    ProjectPage page = (ProjectPage)this.tablessTabControl.TabPages[i].Controls[0];
+                    if(page.Project == project){
+                        if(tablessTabControl.SelectedIndex == i){
+                            SelectPage(0);
+                        }
+                        tablessTabControl.TabPages.RemoveAt(i);
+                        pageList.Items.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+
         public void SelectPage(int pageI) {
             pageList.SelectedIndex = pageI;
             tablessTabControl.SelectedIndex = pageI;
@@ -124,9 +140,6 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
         }
 
         private void propertiesToolStripMenuItem_Click(object sender, EventArgs e) {
-            if(this.pageList.SelectedIndex <= 0){
-                return;
-            }
             ProjectPage page = (ProjectPage)this.tablessTabControl.SelectedTab.Controls[0];
             Project project = page.Project;
             StringBuilder builder = new StringBuilder();
@@ -135,6 +148,24 @@ namespace TheOpenLauncher.VersionPublisher.GUI {
             builder.AppendLine("Project folder: " + project.ProjectFolder);
             builder.AppendLine("Publisher: " + project.publisher.ToString());
             MessageBox.Show(builder.ToString(), "Project info");
+        }
+
+        private void closeProjectToolStripMenuItem_Click(object sender, EventArgs e) {
+            ProjectPage page = (ProjectPage)this.tablessTabControl.SelectedTab.Controls[0];
+            Project project = page.Project;
+            CloseProject(project);
+            Settings.Instance.Projects.Remove(project);
+            Settings.Instance.Save();
+        }
+
+        private void pageList_MouseDown(object sender, MouseEventArgs e) {
+            pageList.SelectedIndex = pageList.IndexFromPoint(e.X, e.Y);
+            if(e.Button == System.Windows.Forms.MouseButtons.Right){
+                bool projectSelected = this.pageList.SelectedIndex > 0;
+                propertiesToolStripMenuItem.Enabled = projectSelected;
+                closeProjectToolStripMenuItem.Enabled = projectSelected;
+                contextMenu.Show(pageList, e.Location);
+            }
         }
     }
 }
