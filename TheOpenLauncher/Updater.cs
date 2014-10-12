@@ -40,21 +40,28 @@ namespace TheOpenLauncher {
             updateInfoHelper.RetrieveUpdateInfos(appInfo, appInfoSource, version, callback);
         }
 
-        public void ApplyUpdate(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource) {
-            string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
-            if (File.Exists(lockFile)) {
-                throw new Exception("Could not update: the application folder is already locked by another updater instance.");
-            } else {
-                File.Create(lockFile).Close();
+        private void DownloadFile(Uri url, string targetFile) {
+            if (!Directory.GetParent(targetFile).Exists) {
+                Directory.GetParent(targetFile).Create();
             }
-            
-            FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
+            if(File.Exists(targetFile)){
+                File.Delete(targetFile);
+            }
 
+            try {
+                fileDownloader.DownloadFile(url, targetFile);
+            }catch(WebException ex){
+                ex.Data.Add("Target", url);
+                throw ex;
+            }
+        }
+
+        private void UpdateLocalFiles(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource, FileIndex index) {
             //Update/delete existing files
-            for(int i = 0;i<index.files.Count;i++) {
+            for (int i = 0; i < index.files.Count; i++) {
                 ProgressChangedEventHandler eventDelegate = ProgressChanged;
                 if (eventDelegate != null) {
-                    int percentageDone = (int)( (((double)i / (double)index.files.Count) / 2d) * 100d );
+                    int percentageDone = (int)((((double)i / (double)index.files.Count) / 2d) * 100d);
                     eventDelegate(this, new ProgressChangedEventArgs(percentageDone, "Updating existing files"));
                 }
 
@@ -68,20 +75,20 @@ namespace TheOpenLauncher {
                         info.fileChecksums.TryGetValue(curFile, out updatedHash);
 
                         if (!curHash.Equals(updatedHash)) {
-                            File.Delete(curLocalFile);
-                            fileDownloader.DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
+                            DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
                         }
                     } else {
-                        Directory.GetParent(curLocalFile).Create();
-                        fileDownloader.DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
+                        DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
                     }
                 } else {
                     File.Delete(curLocalFile);
                 }
             }
+        }
 
+        private void InstallNewFiles(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource, FileIndex index) {
             //Install new files
-            for(int i = 0; i < info.fileChecksums.Keys.Count; i++){
+            for (int i = 0; i < info.fileChecksums.Keys.Count; i++) {
                 ProgressChangedEventHandler eventDelegate = ProgressChanged;
                 if (eventDelegate != null) {
                     int percentageDone = Convert.ToInt32(((((double)i / (double)info.fileChecksums.Keys.Count) / 2d) * 100d) + 50d);
@@ -91,12 +98,12 @@ namespace TheOpenLauncher {
                 string curFile = info.fileChecksums.Keys.ElementAt(i);
                 string curLocalFile = InstallationSettings.InstallationFolder + '/' + curFile;
 
-                if(index.files.Contains(curFile)){
+                if (index.files.Contains(curFile)) {
                     //Already handled file
                     continue;
                 }
 
-                if(File.Exists(curFile)){
+                if (File.Exists(curFile)) {
                     //File exists but is missing in index?
                     string curHash = FileHasher.GetFileChecksum(curLocalFile);
                     string updatedHash;
@@ -106,8 +113,26 @@ namespace TheOpenLauncher {
                     }
                 }
 
-                Directory.GetParent(curLocalFile).Create();
-                fileDownloader.DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
+                DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
+            }
+        }
+
+        public void ApplyUpdate(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource) {
+            string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
+            if (File.Exists(lockFile)) {
+                throw new Exception("Could not update: the application folder is already locked by another updater instance.");
+            } else {
+                File.Create(lockFile).Close();
+            }
+            
+            FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
+
+            try { 
+                UpdateLocalFiles(appInfo, info, updateInfoSource, index);
+                InstallNewFiles(appInfo, info, updateInfoSource, index);
+            }catch(WebException ex){
+                MessageBox.Show("Updater could not download file: "+ex.Message + "\r\n(" + ex.Data["Target"]+")", "Failed to download file", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
             }
 
             index = new FileIndex(index.appID);

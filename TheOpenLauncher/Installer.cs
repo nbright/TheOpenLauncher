@@ -1,6 +1,8 @@
 ﻿using IWshRuntimeLibrary;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,8 +17,7 @@ namespace TheOpenLauncher
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
-            Microsoft.Win32.RegistryKey key;
-            key = Microsoft.Win32.Registry.CurrentUser
+            RegistryKey key = Registry.CurrentUser
                 .OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", true)
                 .CreateSubKey(name);
             key.SetValue("DisplayName", LauncherSettings.ApplicationName);
@@ -32,6 +33,13 @@ namespace TheOpenLauncher
             key.Close();
         }
 
+        public void RemoveUninstallRegistryEntry() {
+            string name = LauncherSettings.ApplicationName;
+            name.Replace('\\', '/');
+
+            Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", true).DeleteSubKey(name);
+        }
+
         public void CreateDesktopShortcut()
         {
             string pathToExe = InstallationSettings.InstallationFolder + "/" + LauncherSettings.UpdaterExecutable; //
@@ -45,8 +53,7 @@ namespace TheOpenLauncher
             appShortcut.Save(); 
         }
 
-        public void CreateStartMenuEntry()
-        {
+        public void CreateStartMenuEntry(){
             string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
             string appStartMenuPath = Path.Combine(Path.Combine(startMenuPath, "Programs"), LauncherSettings.ApplicationName);
 
@@ -70,7 +77,7 @@ namespace TheOpenLauncher
             uninstallerShortcut.Description = "Uninstall " + LauncherSettings.ApplicationName;
             uninstallerShortcut.Arguments = "-uninstall";
             uninstallerShortcut.TargetPath = pathToUninstaller;
-            appShortcut.Save(); 
+            uninstallerShortcut.Save(); 
 
             //website shortcut
             if (LauncherSettings.InfoURL != null){
@@ -79,6 +86,29 @@ namespace TheOpenLauncher
                 webShortcut.Description = "View online info about " + LauncherSettings.ApplicationName;
                 webShortcut.TargetPath = LauncherSettings.InfoURL;
                 webShortcut.Save(); 
+            }
+        }
+
+        public void RemoveStartMenuEntry(){
+            string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
+            string appStartMenuPath = Path.Combine(Path.Combine(startMenuPath, "Programs"), LauncherSettings.ApplicationName);
+            if (!Directory.Exists(appStartMenuPath)) { return; }
+
+            string appShortcutLocation = Path.Combine(appStartMenuPath, LauncherSettings.ApplicationName + ".lnk");
+            string uninstallShortcutLocation = Path.Combine(appStartMenuPath, "Uninstall " + LauncherSettings.ApplicationName + ".lnk");
+            string webShortcutLocation = Path.Combine(appStartMenuPath, LauncherSettings.ApplicationName + " online info.lnk");
+            if (System.IO.File.Exists(appShortcutLocation)) {
+                System.IO.File.Delete(appShortcutLocation);
+            }
+            if (System.IO.File.Exists(uninstallShortcutLocation)) {
+                System.IO.File.Delete(uninstallShortcutLocation);
+            }
+            if (System.IO.File.Exists(webShortcutLocation)) {
+                System.IO.File.Delete(webShortcutLocation);
+            }
+            DirectoryInfo appStartMenuDir = new DirectoryInfo(appStartMenuPath);
+            if (appStartMenuDir.GetFiles().Length == 0 && appStartMenuDir.GetDirectories().Length == 0) {
+                appStartMenuDir.Delete();
             }
         }
 
@@ -125,6 +155,71 @@ namespace TheOpenLauncher
                 });
             });
             progressWindow.ShowDialog();
+        }
+
+        private string[] DeleteFiles() {
+            FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
+            List<string> failedToRemove = new List<string>();
+            foreach (string cur in index.files) {
+                try {
+                    string curFile = InstallationSettings.InstallationFolder + '/' + cur;
+                    System.IO.File.Delete(curFile);
+                    DirectoryInfo subDirInfo = Directory.GetParent(curFile);
+                    if (subDirInfo.GetFiles().Length == 0 && subDirInfo.GetDirectories().Length == 0) {
+                        subDirInfo.Delete();
+                    }
+                } catch (Exception) {
+                    failedToRemove.Add(cur);
+                }
+            }
+
+            System.IO.File.Delete(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
+
+            DirectoryInfo dirInfo = new DirectoryInfo(InstallationSettings.InstallationFolder);
+            if (dirInfo.GetFiles().Length == 0 && dirInfo.GetDirectories().Length == 0) {
+                dirInfo.Delete();
+            }
+
+            return failedToRemove.ToArray();
+        }
+
+        private void ScheduleFileRemovals(string[] files) {
+            string taskGUID = Guid.NewGuid().ToString();
+
+            string cleanupFile = InstallationSettings.InstallationFolder + "/Cleanup.bat";
+            StringBuilder cmds = new StringBuilder();
+            cmds.AppendLine("@echo off");
+            cmds.AppendLine("@title Removing installation leftovers");
+            cmds.AppendLine("echo Removing installation leftovers...");
+            foreach(string file in files){
+                cmds.AppendLine("del /F /S /Q /A \"" + file + "\"");
+            }
+            cmds.AppendLine(@"reg Delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v " + taskGUID);
+            cmds.AppendLine("del /F /S /Q /A \""+cleanupFile+"\"");
+            
+            System.IO.File.WriteAllText(cleanupFile, cmds.ToString());
+
+            RegistryKey registryKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            registryKey.SetValue(taskGUID, Application.ExecutablePath);
+            registryKey.Close();
+        }
+
+        public void UninstallApplication() {
+            if (!Directory.Exists(InstallationSettings.InstallationFolder)) {
+                throw new Exception("Application folder does not exist.");
+            }
+
+            if(!System.IO.File.Exists(InstallationSettings.InstallationFolder + "/UpdateIndex.dat")){
+                throw new Exception("Application update index does not exist.");
+            }
+
+            string[] files = DeleteFiles();
+            if(files.Length > 0){
+                ScheduleFileRemovals(files);
+            }
+
+            RemoveStartMenuEntry();
+            RemoveUninstallRegistryEntry();
         }
 
         public void SetInstallationFolder(string folder) {

@@ -29,7 +29,15 @@ namespace TheOpenLauncher
 
         private void removeButton_Click(object sender, EventArgs e)
         {
-
+            Installer installer = new Installer();
+            try{
+                installer.UninstallApplication();
+            }catch(Exception ex){
+                MessageBox.Show("Failed to remove application data: " + ex.Message, "Failed to uninstall", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            MessageBox.Show(LauncherSettings.ApplicationName + " was succesfully removed.", "Uninstallation finished.", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.Close();
         }
     }
 }
