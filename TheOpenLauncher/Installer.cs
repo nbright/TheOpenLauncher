@@ -147,10 +147,10 @@ namespace TheOpenLauncher
                         if (InstallationSettings.CreateStartMenuEntry) {
                             CreateStartMenuEntry();
                         }
-                        progressWindow.Hide();
+                        progressWindow.Invoke((Action)(() => { progressWindow.Hide(); }));
                         InstallationFinishedForm finishedForm = new InstallationFinishedForm();
                         finishedForm.ShowDialog();
-                        progressWindow.Close();
+                        progressWindow.Invoke((Action)(() => { progressWindow.Close(); }));
                     });
                     Thread updateThread = new Thread(new ThreadStart(startUpdate));
                     updateThread.Name = "Update thread";
@@ -198,7 +198,7 @@ namespace TheOpenLauncher
             foreach(string file in files){
                 cmds.AppendLine("del /F /S /Q /A \"" + file + "\"");
             }
-            cmds.AppendLine(@"reg Delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v " + taskGUID);
+            cmds.AppendLine(@"reg Delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /f /v " + taskGUID);
             cmds.AppendLine("del /F /S /Q /A \""+cleanupFile+"\"");
             
             System.IO.File.WriteAllText(cleanupFile, cmds.ToString());
