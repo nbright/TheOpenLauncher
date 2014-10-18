@@ -9,16 +9,14 @@ using System.Linq;
 
 namespace TheOpenLauncher {
     public class Updater {
-        public class ProgressChangedEventArgs : EventArgs
-        {
-    	    public int PercentageDone;
+        public class ProgressChangedEventArgs : EventArgs {
+            public int PercentageDone;
             public String CurrentAction;
 
-            public ProgressChangedEventArgs(int percentageDone, string currentAction)
-    	    {
+            public ProgressChangedEventArgs(int percentageDone, string currentAction) {
                 this.PercentageDone = percentageDone;
                 this.CurrentAction = currentAction;
-    	    }
+            }
         }
 
         public delegate void ProgressChangedEventHandler(object source, ProgressChangedEventArgs e);
@@ -26,7 +24,6 @@ namespace TheOpenLauncher {
 
         private AppInfoHelper appInfoHelper = new AppInfoHelper();
         private UpdateInfoHelper updateInfoHelper = new UpdateInfoHelper();
-        private WebClient fileDownloader = new WebClient();
 
         public void RetrieveAppInfo(Action<AppInfo, UpdateHost> callback) {
             appInfoHelper.RetrieveAppInfo(callback);
@@ -40,31 +37,71 @@ namespace TheOpenLauncher {
             updateInfoHelper.RetrieveUpdateInfos(appInfo, appInfoSource, version, callback);
         }
 
-        private void DownloadFile(Uri url, string targetFile) {
-            if (!Directory.GetParent(targetFile).Exists) {
-                Directory.GetParent(targetFile).Create();
-            }
-            if(File.Exists(targetFile)){
-                File.Delete(targetFile);
+        public enum TaskType {
+            DeleteFile, DownloadNewFile, DownloadReplacementFile
+        }
+
+        public class UpdateTask {
+            TaskType type;
+            Uri remoteFile;
+            string localFile;
+
+            public UpdateTask(TaskType type, string localFile) : this(type, null, localFile) { }
+            public UpdateTask(TaskType type, Uri remoteFile, string localFile) {
+                this.type = type;
+                this.remoteFile = remoteFile;
+                this.localFile = localFile;
             }
 
-            try {
-                fileDownloader.DownloadFile(url, targetFile);
-            }catch(WebException ex){
-                ex.Data.Add("Target", url);
-                throw ex;
+            public void Run() {
+                if (TaskType.DeleteFile.Equals(type)) {
+                    File.Delete(localFile);
+                } else if (TaskType.DownloadNewFile.Equals(type) || TaskType.DownloadReplacementFile.Equals(type)) { //Might want to disable replacing for non existant files
+                    DownloadFile(remoteFile, localFile);
+                }
+            }
+
+            private void DownloadFile(Uri url, string targetFile) {
+                if (!Directory.GetParent(targetFile).Exists) {
+                    Directory.GetParent(targetFile).Create();
+                }
+                if (File.Exists(targetFile)) {
+                    File.Delete(targetFile);
+                }
+
+                try {
+                    using (WebClient fileDownloader = new WebClient()) {
+                        fileDownloader.DownloadFile(url, targetFile); //Switching to async requires a fix for disposal!
+                    }
+                } catch (WebException ex) {
+                    ex.Data.Add("Target", url);
+                    throw ex;
+                }
+            }
+
+            public override string ToString() {
+                string verb = "";
+                if (TaskType.DeleteFile.Equals(type)) {
+                    verb = "Deleting";
+                } else if (TaskType.DownloadNewFile.Equals(type)) {
+                    verb = "Downloading";
+                } else if (TaskType.DownloadReplacementFile.Equals(type)) {
+                    verb = "Updating";
+                }
+                return verb + " " + localFile.Replace(InstallationSettings.InstallationFolder + '/', "");
             }
         }
 
-        private void UpdateLocalFiles(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource, FileIndex index) {
-            //Update/delete existing files
-            for (int i = 0; i < index.files.Count; i++) {
-                ProgressChangedEventHandler eventDelegate = ProgressChanged;
-                if (eventDelegate != null) {
-                    int percentageDone = (int)((((double)i / (double)index.files.Count) / 2d) * 100d);
-                    eventDelegate(this, new ProgressChangedEventArgs(percentageDone, "Updating existing files"));
-                }
+        private UpdateTask[] GetUpdaterTasks(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource, FileIndex index) {
+            List<UpdateTask> updateTasks = new List<UpdateTask>();
+            updateTasks.AddRange(GetOldFileTasks(appInfo, info, updateInfoSource, index));
+            updateTasks.AddRange(GetNewFileTasks(appInfo, info, updateInfoSource, index));
+            return updateTasks.ToArray();
+        }
 
+        private List<UpdateTask> GetOldFileTasks(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource, FileIndex index) {
+            List<UpdateTask> updateTasks = new List<UpdateTask>();
+            for (int i = 0; i < index.files.Count; i++) {
                 string curFile = index.files[i];
                 string curLocalFile = InstallationSettings.InstallationFolder + '/' + curFile;
 
@@ -75,26 +112,21 @@ namespace TheOpenLauncher {
                         info.fileChecksums.TryGetValue(curFile, out updatedHash);
 
                         if (!curHash.Equals(updatedHash)) {
-                            DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
+                            updateTasks.Add(new UpdateTask(TaskType.DownloadReplacementFile, updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile));
                         }
                     } else {
-                        DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
+                        updateTasks.Add(new UpdateTask(TaskType.DownloadNewFile, updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile));
                     }
                 } else {
-                    File.Delete(curLocalFile);
+                    updateTasks.Add(new UpdateTask(TaskType.DeleteFile, curLocalFile));
                 }
             }
+            return updateTasks;
         }
 
-        private void InstallNewFiles(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource, FileIndex index) {
-            //Install new files
+        private List<UpdateTask> GetNewFileTasks(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource, FileIndex index) {
+            List<UpdateTask> updateTasks = new List<UpdateTask>();
             for (int i = 0; i < info.fileChecksums.Keys.Count; i++) {
-                ProgressChangedEventHandler eventDelegate = ProgressChanged;
-                if (eventDelegate != null) {
-                    int percentageDone = Convert.ToInt32(((((double)i / (double)info.fileChecksums.Keys.Count) / 2d) * 100d) + 50d);
-                    eventDelegate(this, new ProgressChangedEventArgs(percentageDone, "Installing new files"));
-                }
-
                 string curFile = info.fileChecksums.Keys.ElementAt(i);
                 string curLocalFile = InstallationSettings.InstallationFolder + '/' + curFile;
 
@@ -103,18 +135,21 @@ namespace TheOpenLauncher {
                     continue;
                 }
 
-                if (File.Exists(curFile)) {
+                if (File.Exists(curLocalFile)) {
                     //File exists but is missing in index?
                     string curHash = FileHasher.GetFileChecksum(curLocalFile);
                     string updatedHash;
                     info.fileChecksums.TryGetValue(curFile, out updatedHash);
                     if (updatedHash.Equals(curHash)) {
                         continue;
+                    } else {
+                        updateTasks.Add(new UpdateTask(TaskType.DownloadReplacementFile, updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile));
                     }
+                } else {
+                    updateTasks.Add(new UpdateTask(TaskType.DownloadNewFile, updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile));
                 }
-
-                DownloadFile(updateInfoSource.GetFileURL(appInfo, info, curFile), curLocalFile);
             }
+            return updateTasks;
         }
 
         public void ApplyUpdate(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource) {
@@ -124,22 +159,52 @@ namespace TheOpenLauncher {
             } else {
                 File.Create(lockFile).Close();
             }
-            
+
+            TriggerProgressEvent(0, "Calculating updater tasks");
+
             FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
 
-            try { 
-                UpdateLocalFiles(appInfo, info, updateInfoSource, index);
-                InstallNewFiles(appInfo, info, updateInfoSource, index);
-            }catch(WebException ex){
-                MessageBox.Show("Updater could not download file: "+ex.Message + "\r\n(" + ex.Data["Target"]+")", "Failed to download file", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Application.Exit();
+            UpdateTask[] tasks = GetUpdaterTasks(appInfo, info, updateInfoSource, index);
+            List<UpdateTask> failedTasks = new List<UpdateTask>();
+            int percentageDone = 0;
+            for (int i = 0; i < tasks.Length; i++) {
+                UpdateTask curTask = tasks[i];
+                percentageDone = Convert.ToInt32(((double)(i - failedTasks.Count) / (double)tasks.Length) * 100d);
+                TriggerProgressEvent(percentageDone, curTask.ToString());
+                try {
+                    curTask.Run();
+                } catch (Exception ex) {
+                    failedTasks.Add(curTask);
+                }
             }
+
+            TriggerProgressEvent(percentageDone, "Retrying failed tasks");
+            for (int i = 0; i < failedTasks.Count; i++) {
+                UpdateTask task = failedTasks[i];
+                try {
+                    task.Run();
+                } catch (WebException ex) {
+                    if (MessageBox.Show("Updater could not download file: " + ex.Message + "\r\n(" + ex.Data["Target"] + ")", "Failed to download file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error).Equals(DialogResult.Retry)) {
+                        i--; //Retry
+                    } else {
+                        Application.Exit();
+                    }
+                }
+            }
+            TriggerProgressEvent(98, "Updating local file index");
 
             index = new FileIndex(index.appID);
             index.applicationVersion = info.version;
             index.files.AddRange(info.fileChecksums.Keys);
             index.Serialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
             File.Delete(lockFile);
+        }
+
+        private void TriggerProgressEvent(int percentageDone, string currentAction) {
+            ProgressChangedEventHandler eventDelegate = ProgressChanged;
+            if (eventDelegate != null) {
+                eventDelegate(this, new ProgressChangedEventArgs(percentageDone, currentAction));
+            }
         }
 
         private class AppInfoHelper {
@@ -205,14 +270,14 @@ namespace TheOpenLauncher {
                 if (client.IsBusy) {
                     throw new Exception("Cannot execute multiple updateinfo requests at once.");
                 }
-                client.DownloadStringAsync(appInfoSource.GetVersionInfoURL(appInfo, version), new UpdateInfoDownloadHelper(callback, appInfoSource, version ));
+                client.DownloadStringAsync(appInfoSource.GetVersionInfoURL(appInfo, version), new UpdateInfoDownloadHelper(callback, appInfoSource, version));
             }
 
             public void RetrieveUpdateInfos(AppInfo appInfo, UpdateHost appInfoSource, double[] versions, Action<UpdateInfo, UpdateHost, int> callback) {
                 if (client.IsBusy) {
                     throw new Exception("Cannot execute multiple updateinfo requests at once.");
                 }
-                for (int i = 0; i < versions.Length;i++ ) {
+                for (int i = 0; i < versions.Length; i++) {
                     WebClient curClient = new WebClient();
                     curClient.DownloadStringCompleted += client_DownloadStringCompleted;
                     curClient.DownloadStringAsync(appInfoSource.GetVersionInfoURL(appInfo, versions[i]), new UpdateInfoDownloadHelper(callback, appInfoSource, versions, i));
@@ -255,7 +320,7 @@ namespace TheOpenLauncher {
                     this.index = i;
                 }
 
-                public bool IsSingleUpdate{
+                public bool IsSingleUpdate {
                     get {
                         return singleUpdateCallback != null;
                     }
