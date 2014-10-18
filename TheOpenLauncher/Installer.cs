@@ -226,7 +226,7 @@ namespace TheOpenLauncher
             RemoveUninstallRegistryEntry();
         }
 
-        public void SetInstallationFolder(string folder) {
+        public static void SetInstallationFolder(string folder) {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 

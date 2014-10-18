@@ -95,13 +95,23 @@ namespace TheOpenLauncher
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            if(!Installer.IsInstalled()){
+            if (!Installer.IsInstalled() && !startupArguments.ContainsKey("forceInstallDir")) {
                 Application.Run(new InstallForm());
-            }else{
+            } else {
+                if (startupArguments.ContainsKey("forceInstallDir")) {
+                    string value;
+                    if (startupArguments.TryGetValue("forceInstallDir", out value)) {
+                        Installer.SetInstallationFolder(value);
+                    } else {
+                        MessageBox.Show("Invalid installation directory");
+                        return;
+                    }
+                }
+
                 InstallationSettings.InstallationFolder = Installer.GetInstallationFolder();
-                if(startupArguments.ContainsKey("uninstall")){
+                if (startupArguments.ContainsKey("uninstall")) {
                     Application.Run(new UninstallForm());
-                }else{
+                } else {
                     Application.Run(new MainForm());
                 }
             }
