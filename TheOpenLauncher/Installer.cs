@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace TheOpenLauncher
@@ -112,46 +113,49 @@ namespace TheOpenLauncher
             }
         }
 
-        public void InstallApplication()
-        {
-            if(!Directory.Exists(InstallationSettings.InstallationFolder)){
+        public void InstallApplication() {
+            if (!Directory.Exists(InstallationSettings.InstallationFolder)) {
                 Directory.CreateDirectory(InstallationSettings.InstallationFolder);
             }
 
             FileIndex newIndex = new FileIndex(LauncherSettings.AppID);
             newIndex.Serialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
-            
+
             Updater updater = new Updater();
             UpdateProgressWindow progressWindow = new UpdateProgressWindow(updater);
-            progressWindow.SetProgress(10, "Retrieving update info");
+            progressWindow.SetProgress(0, "Retrieving update info");
             updater.RetrieveAppInfo((appInfo, host) => {
-                if(appInfo == null){
+                if (appInfo == null) {
                     MessageBox.Show(progressWindow, "Cannot install: No valid download mirrors online.", "Failed to install", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Application.Exit();
                 }
                 updater.RetrieveUpdateInfo(appInfo, host, appInfo.LatestVersion, (updateInfo, updateHost) => {
-                    if (updateInfo == null){
-                        MessageBox.Show("No valid update info found.");
-                        //TODO: Handle this. Should either search for new appInfo host or fail.
-                    }
-                    progressWindow.SetProgress(20, "Applying updates");
-                    updater.ApplyUpdate(appInfo, updateInfo, updateHost);
+                    Action startUpdate = (() => {
+                        if (updateInfo == null) {
+                            MessageBox.Show("No valid update info found.");
+                            //TODO: Handle this. Should either search for new appInfo host or fail.
+                        }
+                        progressWindow.SetProgress(20, "Applying updates");
+                        updater.ApplyUpdate(appInfo, updateInfo, updateHost);
 
-                    progressWindow.SetProgress(90, "Registering installation");
-                    CreateUninstallRegistryEntry();
-                    SetInstallationFolder(InstallationSettings.InstallationFolder);
-                    if (InstallationSettings.CreateDesktopShortcut)
-                    {
-                        CreateDesktopShortcut();
-                    }
-                    if (InstallationSettings.CreateStartMenuEntry)
-                    {
-                        CreateStartMenuEntry();
-                    }
-                    progressWindow.Hide();
-                    InstallationFinishedForm finishedForm = new InstallationFinishedForm();
-                    finishedForm.ShowDialog();
-                    progressWindow.Close();
+                        progressWindow.SetProgress(90, "Registering installation");
+                        CreateUninstallRegistryEntry();
+                        SetInstallationFolder(InstallationSettings.InstallationFolder);
+                        if (InstallationSettings.CreateDesktopShortcut) {
+                            CreateDesktopShortcut();
+                        }
+                        if (InstallationSettings.CreateStartMenuEntry) {
+                            CreateStartMenuEntry();
+                        }
+                        progressWindow.Hide();
+                        InstallationFinishedForm finishedForm = new InstallationFinishedForm();
+                        finishedForm.ShowDialog();
+                        progressWindow.Close();
+                    });
+                    Thread updateThread = new Thread(new ThreadStart(startUpdate));
+                    updateThread.Name = "Update thread";
+                    updateThread.IsBackground = true;
+                    updateThread.Start();
                 });
             });
             progressWindow.ShowDialog();

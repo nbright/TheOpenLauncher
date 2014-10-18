@@ -91,6 +91,8 @@ namespace TheOpenLauncher
                 }
             }
 
+            System.Net.ServicePointManager.DefaultConnectionLimit = 32;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             if(!Installer.IsInstalled()){

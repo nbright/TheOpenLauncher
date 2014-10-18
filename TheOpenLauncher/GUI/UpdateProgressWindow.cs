@@ -20,10 +20,6 @@ namespace TheOpenLauncher
             this.updater = updater;
             this.Text = LauncherLocale.Current.Get("Updater.Progress.Title");
             cancelButton.Text = LauncherLocale.Current.Get("Updater.Progress.CancelButton");
-            HandleCreated += UpdateProgressWindow_HandleCreated;
-        }
-
-        void UpdateProgressWindow_HandleCreated(object sender, EventArgs e) {
             updater.ProgressChanged += (source, eventInfo) => {
                 this.SetProgress(eventInfo.PercentageDone, eventInfo.CurrentAction);
             };
@@ -43,10 +39,15 @@ namespace TheOpenLauncher
 
         public void SetProgress(int progressBarValue, string currentAction)
         {
-            this.Invoke((Action)(() => {
+            if(!InvokeRequired){
                 progressBar.Value = progressBarValue;
                 currentActionLabel.Text = currentAction;
-            }));
+            }else if(IsHandleCreated){
+                this.Invoke((Action)(() => {
+                    progressBar.Value = progressBarValue;
+                    currentActionLabel.Text = currentAction;
+                }));
+            }
         }
     }
 }
