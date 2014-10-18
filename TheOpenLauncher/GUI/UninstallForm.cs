@@ -29,6 +29,10 @@ namespace TheOpenLauncher
 
         private void removeButton_Click(object sender, EventArgs e)
         {
+            removeButton.Enabled = false;
+            cancelButton.Enabled = false;
+            this.UseWaitCursor = true;
+
             Installer installer = new Installer();
             try{
                 installer.UninstallApplication();

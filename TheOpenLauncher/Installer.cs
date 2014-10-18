@@ -164,7 +164,8 @@ namespace TheOpenLauncher
         private string[] DeleteFiles() {
             FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
             List<string> failedToRemove = new List<string>();
-            foreach (string cur in index.files) {
+            string[] filesSortedByDepth = index.files.OrderByDescending(path => path.Split(new Char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Length).ToArray();
+            foreach (string cur in filesSortedByDepth) { //Delete files, deepest first, topmost last.
                 try {
                     string curFile = InstallationSettings.InstallationFolder + '/' + cur;
                     System.IO.File.Delete(curFile);
