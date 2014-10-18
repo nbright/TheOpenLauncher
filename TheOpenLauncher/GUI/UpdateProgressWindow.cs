@@ -20,6 +20,7 @@ namespace TheOpenLauncher
             this.updater = updater;
             this.Text = LauncherLocale.Current.Get("Updater.Progress.Title");
             cancelButton.Text = LauncherLocale.Current.Get("Updater.Progress.CancelButton");
+            currentActionLabel.AutoEllipsis = true;
             updater.ProgressChanged += (source, eventInfo) => {
                 this.SetProgress(eventInfo.PercentageDone, eventInfo.CurrentAction);
             };

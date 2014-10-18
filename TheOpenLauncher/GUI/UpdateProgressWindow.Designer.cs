@@ -53,10 +53,9 @@
             // 
             // currentActionLabel
             // 
-            this.currentActionLabel.AutoSize = true;
             this.currentActionLabel.Location = new System.Drawing.Point(21, 64);
             this.currentActionLabel.Name = "currentActionLabel";
-            this.currentActionLabel.Size = new System.Drawing.Size(92, 19);
+            this.currentActionLabel.Size = new System.Drawing.Size(345, 19);
             this.currentActionLabel.TabIndex = 2;
             this.currentActionLabel.Text = "Current action";
             // 
@@ -73,7 +72,6 @@
             this.Resizable = false;
             this.Text = "Update progress";
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
