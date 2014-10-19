@@ -6,6 +6,7 @@ using System.Text;
 using System.Windows.Forms;
 using TheOpenLauncher.Properties;
 using System.Linq;
+using System.Threading;
 
 namespace TheOpenLauncher {
     public class Updater {
@@ -21,6 +22,7 @@ namespace TheOpenLauncher {
 
         public delegate void ProgressChangedEventHandler(object source, ProgressChangedEventArgs e);
         public event ProgressChangedEventHandler ProgressChanged;
+        private int percentageDone;
 
         private AppInfoHelper appInfoHelper = new AppInfoHelper();
         private UpdateInfoHelper updateInfoHelper = new UpdateInfoHelper();
@@ -152,6 +154,68 @@ namespace TheOpenLauncher {
             return updateTasks;
         }
 
+
+        private List<UpdateTask> RunTasks(UpdateTask[] tasks) {
+            return RunTasks(tasks, false, 0);
+        }
+        private List<UpdateTask> RunTasks(UpdateTask[] tasks, bool multithreadedTaskRunning, int maxParallelTasks) {
+            List<UpdateTask> failedTasks = new List<UpdateTask>();
+            using (ManualResetEvent resetEvent = new ManualResetEvent(false)) {
+                int tasksToRun = tasks.Length;
+                int tasksActive = 0;
+                for (int i = 0; i < tasks.Length; i++) {
+                    UpdateTask curTask = tasks[i];
+                    if (multithreadedTaskRunning) {
+                        if (tasksActive == maxParallelTasks) {
+                            Thread.Sleep(10);
+                            i--;
+                            continue;
+                        }
+
+                        bool queued = false;
+                        while (!queued) {
+                            queued = ThreadPool.QueueUserWorkItem(
+                                new WaitCallback(
+                                    task => {
+                                        try {
+                                            int tasksDone = tasks.Length - tasksToRun;
+                                            percentageDone = Convert.ToInt32(((double)(tasksDone - failedTasks.Count) / (double)tasks.Length) * 100d);
+                                            TriggerProgressEvent(percentageDone, curTask.ToString());
+
+                                            ((UpdateTask)task).Run();
+                                        } catch (Exception) {
+                                            failedTasks.Add(curTask);
+                                        } finally {
+                                            if (Interlocked.Decrement(ref tasksToRun) == 0) { resetEvent.Set(); }
+                                            Interlocked.Decrement(ref tasksActive);
+                                        }
+                                    }
+                                ), curTask
+                            );
+
+                            if (!queued) {
+                                Thread.Sleep(10);
+                            } else {
+                                Interlocked.Increment(ref tasksActive);
+                            }
+                        }
+                    } else {
+                        resetEvent.Set();
+
+                        percentageDone = Convert.ToInt32(((double)(i - failedTasks.Count) / (double)tasks.Length) * 100d);
+                        TriggerProgressEvent(percentageDone, curTask.ToString());
+                        try {
+                            curTask.Run();
+                        } catch (Exception ex) {
+                            failedTasks.Add(curTask);
+                        }
+                    }
+                }
+                resetEvent.WaitOne();
+            }
+            return failedTasks;
+        }
+
         public void ApplyUpdate(AppInfo appInfo, UpdateInfo info, UpdateHost updateInfoSource) {
             string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
             if (File.Exists(lockFile)) {
@@ -165,18 +229,7 @@ namespace TheOpenLauncher {
             FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
 
             UpdateTask[] tasks = GetUpdaterTasks(appInfo, info, updateInfoSource, index);
-            List<UpdateTask> failedTasks = new List<UpdateTask>();
-            int percentageDone = 0;
-            for (int i = 0; i < tasks.Length; i++) {
-                UpdateTask curTask = tasks[i];
-                percentageDone = Convert.ToInt32(((double)(i - failedTasks.Count) / (double)tasks.Length) * 100d);
-                TriggerProgressEvent(percentageDone, curTask.ToString());
-                try {
-                    curTask.Run();
-                } catch (Exception ex) {
-                    failedTasks.Add(curTask);
-                }
-            }
+            List<UpdateTask> failedTasks = RunTasks(tasks, true, 10);
 
             TriggerProgressEvent(percentageDone, "Retrying failed tasks");
             for (int i = 0; i < failedTasks.Count; i++) {
