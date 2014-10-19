@@ -18,27 +18,35 @@ namespace TheOpenLauncher
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
-            RegistryKey key = Registry.CurrentUser
-                .OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", true)
-                .CreateSubKey(name);
-            key.SetValue("DisplayName", LauncherSettings.ApplicationName);
-            key.SetValue("InstallLocation", InstallationSettings.InstallationFolder);
-            key.SetValue("Publisher", LauncherSettings.CompanyName);
-            if(!String.IsNullOrEmpty(LauncherSettings.InfoURL)){ key.SetValue("URLInfoAbout", LauncherSettings.InfoURL);}
-            if(!String.IsNullOrEmpty(LauncherSettings.HelpURL)) { key.SetValue("HelpLink", LauncherSettings.InfoURL); }
-            if(!String.IsNullOrEmpty(LauncherSettings.UpdateInfoURL)) { key.SetValue("URLUpdateInfo", LauncherSettings.InfoURL); }
-            key.SetValue("NoModify", 1);
-            key.SetValue("NoRepair", 1);
-            string uninstallStr = '"' + InstallationSettings.InstallationFolder + "/" + LauncherSettings.UpdaterExecutable + '"' + " -uninstall";
-            key.SetValue("UninstallString", uninstallStr);
-            key.Close();
+            RegistryKey uninstallKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", true);
+            if (uninstallKey == null) {
+                uninstallKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
+            }
+
+            using (RegistryKey key = uninstallKey.CreateSubKey(name)) {
+                key.SetValue("DisplayName", LauncherSettings.ApplicationName);
+                string uninstallStr = '"' + InstallationSettings.InstallationFolder + "/" + LauncherSettings.UpdaterExecutable + '"' + " -uninstall";
+                key.SetValue("UninstallString", uninstallStr);
+                key.SetValue("InstallLocation", InstallationSettings.InstallationFolder);
+                key.SetValue("Publisher", LauncherSettings.CompanyName);
+                if (!String.IsNullOrEmpty(LauncherSettings.InfoURL)) { key.SetValue("URLInfoAbout", LauncherSettings.InfoURL); }
+                if (!String.IsNullOrEmpty(LauncherSettings.HelpURL)) { key.SetValue("HelpLink", LauncherSettings.InfoURL); }
+                if (!String.IsNullOrEmpty(LauncherSettings.UpdateInfoURL)) { key.SetValue("URLUpdateInfo", LauncherSettings.InfoURL); }
+                key.SetValue("NoModify", 1);
+                key.SetValue("NoRepair", 1);
+                key.Close();
+            }
+            uninstallKey.Close();
         }
 
         public void RemoveUninstallRegistryEntry() {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
-            Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", true).DeleteSubKey(name);
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", true);
+            if (key != null) {
+                key.DeleteSubKey(name);
+            }
         }
 
         public void CreateDesktopShortcut()
@@ -139,14 +147,23 @@ namespace TheOpenLauncher
                         updater.ApplyUpdate(appInfo, updateInfo, updateHost);
 
                         progressWindow.SetProgress(90, "Registering installation");
-                        CreateUninstallRegistryEntry();
-                        SetInstallationFolder(InstallationSettings.InstallationFolder);
-                        if (InstallationSettings.CreateDesktopShortcut) {
-                            CreateDesktopShortcut();
+                        try {
+                            CreateUninstallRegistryEntry();
+                            SetInstallationFolder(InstallationSettings.InstallationFolder);
+                            if (InstallationSettings.CreateDesktopShortcut) {
+                                CreateDesktopShortcut();
+                            }
+                            if (InstallationSettings.CreateStartMenuEntry) {
+                                CreateStartMenuEntry();
+                            }
+                        } catch (Exception ex) {
+                            MessageBox.Show(
+                                "An exception occured while registering the application. \r\n" +
+                                ex.Message +
+                                "\r\nTo uninstall the application run the updater with -uninstall -forceInstallDir <installfolder>", "Error"
+                                );
                         }
-                        if (InstallationSettings.CreateStartMenuEntry) {
-                            CreateStartMenuEntry();
-                        }
+
                         progressWindow.Invoke((Action)(() => { progressWindow.Hide(); }));
                         InstallationFinishedForm finishedForm = new InstallationFinishedForm();
                         finishedForm.ShowDialog();
