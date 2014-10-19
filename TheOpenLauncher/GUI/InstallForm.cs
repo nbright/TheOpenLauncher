@@ -51,8 +51,7 @@ namespace TheOpenLauncher
                 installer.InstallApplication();
                 this.Close();
             } catch (UnauthorizedAccessException) {
-                string[] args = Environment.GetCommandLineArgs();
-                Program.RequestElevation(String.Join(" ", args, 1, args.Length-1));
+                Program.RequestElevation();
             } catch (Exception ex) {
                 MessageBox.Show("An error occured while attempting to install the application. ("+ex.Message+")", "An error occured", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Close();

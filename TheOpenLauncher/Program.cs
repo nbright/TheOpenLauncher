@@ -45,12 +45,23 @@ namespace TheOpenLauncher
             }
         }
 
-        /**
-         * Try to start the application with administrator rights. 
-         * If this succeeds, the current application will close immediately.
-         * If this fails, this method will return false
-         */
-        public static bool RequestElevation(string args){
+        /// <summary>
+        /// Try to start the application with administrator rights. 
+        /// The arguments are copied from the current instance.
+        /// If this succeeds, the current application will close immediately.
+        /// If this fails, this method will return false
+        /// </summary>
+        public static bool RequestElevation() {
+            string[] args = Environment.GetCommandLineArgs();
+            return RequestElevation(String.Join(" ", args, 1, args.Length - 1));
+        }
+
+        /// <summary>
+        /// Try to start the application with administrator rights.
+        /// If this succeeds, the current application will close immediately.
+        /// If this fails, this method will return false
+        /// </summary>
+        public static bool RequestElevation(string args) {
             ProcessStartInfo proc = new ProcessStartInfo();
             proc.UseShellExecute = true;
             proc.WorkingDirectory = Environment.CurrentDirectory;
@@ -58,9 +69,9 @@ namespace TheOpenLauncher
             proc.Arguments = args;
             proc.Verb = "runas";
 
-            try{
+            try {
                 Process.Start(proc);
-            }catch{
+            } catch {
                 return false;
             }
 

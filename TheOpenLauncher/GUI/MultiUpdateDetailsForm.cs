@@ -83,22 +83,25 @@ namespace TheOpenLauncher
             cancelButton.Enabled = false;
             UpdateProgressWindow progressWindow = new UpdateProgressWindow(updater);
             progressWindow.Show();
-            progressWindow.SetProgress(10, "Applying updates");
-            new Thread(() => {
+            progressWindow.SetProgress(0, "Applying updates");
+            Thread updateThread = new Thread(() => {
                 UpdateInfo targetVersion = null;
-                foreach(UpdateInfo cur in updateInfos){
-                    if(cur.version == appInfo.LatestVersion){
+                foreach (UpdateInfo cur in updateInfos) {
+                    if (cur.version == appInfo.LatestVersion) {
                         targetVersion = cur;
                     }
                 }
-                if(targetVersion == null){
+                if (targetVersion == null) {
                     MessageBox.Show("Failed to retrieve update info for most recent update.");
                     this.Invoke((Action)(() => { this.Close(); }));
                     return;
                 }
                 updater.ApplyUpdate(appInfo, targetVersion, hostURL);
                 this.Invoke((Action)(() => { this.Close(); }));
-            }).Start();
+            });
+            updateThread.Name = "Update thread";
+            updateThread.IsBackground = true;
+            updateThread.Start();
         }
 
         private void cancelButton_Click(object sender, EventArgs e)

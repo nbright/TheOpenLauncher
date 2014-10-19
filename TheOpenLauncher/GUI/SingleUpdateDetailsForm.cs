@@ -53,16 +53,17 @@ namespace TheOpenLauncher
             });
         }
 
-        private void updateButton_Click(object sender, EventArgs e)
-        {
+        private void updateButton_Click(object sender, EventArgs e) {
             UpdateProgressWindow progressWindow = new UpdateProgressWindow(updater);
             progressWindow.Show();
-            progressWindow.SetProgress(10, "Applying update");
-            //this.Hide();
-            new Thread(() => {
+            progressWindow.SetProgress(0, "Applying update");
+            Thread updateThread = new Thread(() => {
                 updater.ApplyUpdate(appInfo, updateInfo, updateHost);
                 this.Invoke((Action)(() => { this.Close(); }));
-            }).Start();
+            });
+            updateThread.Name = "Update thread";
+            updateThread.IsBackground = true;
+            updateThread.Start();
         }
 
         private void cancelButton_Click(object sender, EventArgs e)

@@ -44,7 +44,7 @@ namespace TheOpenLauncher
                 progressBar.Value = progressBarValue;
                 currentActionLabel.Text = currentAction;
             }else if(IsHandleCreated){
-                this.Invoke((Action)(() => {
+                this.BeginInvoke((Action)(() => {
                     progressBar.Value = progressBarValue;
                     currentActionLabel.Text = currentAction;
                 }));
