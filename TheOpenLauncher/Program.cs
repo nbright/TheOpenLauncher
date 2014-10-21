@@ -45,6 +45,21 @@ namespace TheOpenLauncher
             }
         }
 
+        public static void SerializeSettings(string file) {
+            string[] lines = new string[3];
+            lines[0] = InstallationSettings.CreateDesktopShortcut.ToString();
+            lines[1] = InstallationSettings.CreateStartMenuEntry.ToString();
+            lines[2] = InstallationSettings.InstallationFolder;
+            File.WriteAllLines(file, lines);
+        }
+
+        public static void DeserializeSettings(string file) {
+            string[] lines = File.ReadAllLines(file);
+            InstallationSettings.CreateDesktopShortcut = Boolean.Parse(lines[0]);
+            InstallationSettings.CreateStartMenuEntry = Boolean.Parse(lines[1]);
+            InstallationSettings.InstallationFolder = lines[2];
+        }
+
         /// <summary>
         /// Try to start the application with administrator rights. 
         /// The arguments are copied from the current instance.
@@ -62,11 +77,20 @@ namespace TheOpenLauncher
         /// If this fails, this method will return false
         /// </summary>
         public static bool RequestElevation(string args) {
+            string configFile;
+            try {
+                configFile = System.IO.Path.GetTempPath() + Guid.NewGuid().ToString() + ".tmp";
+                SerializeSettings(configFile);
+            } catch (Exception) {
+                MessageBox.Show("The settings could not be saved. Please reenter your preferences after providing administator rights.");
+                configFile = null;
+            }
+
             ProcessStartInfo proc = new ProcessStartInfo();
             proc.UseShellExecute = true;
             proc.WorkingDirectory = Environment.CurrentDirectory;
             proc.FileName = Application.ExecutablePath;
-            proc.Arguments = args;
+            proc.Arguments = args + (configFile != null ? (" -settingsFile " + configFile) : "");
             proc.Verb = "runas";
 
             try {
@@ -99,6 +123,14 @@ namespace TheOpenLauncher
                 {
                     MessageBox.Show("Failed to obtain admin rights.", "An error occured", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
+                }
+            }
+
+            if (startupArguments.ContainsKey("settingsFile")) {
+                string settingsFile;
+                if (startupArguments.TryGetValue("settingsFile", out settingsFile)) {
+                    DeserializeSettings(settingsFile);
+                    File.Delete(settingsFile);
                 }
             }
 
