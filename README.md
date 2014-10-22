@@ -17,7 +17,7 @@ After that, you can start publishing updates with the Version Publisher.
 To create the updater, you will first need to get a copy of the source code. Simply (optionally fork) and clone this repository to a local folder and open the enclosed project in Visual Studio. The project was created in Visual Studio 2013 Express but should also work in Visual Studio 2012.
 
 
-<table style="width:100%"><tbody><tr><td style="width:50%; padding-right: 20px; vertical-align: text-top;">
+<table style="width:100%"><tbody><tr><td class="block" style="padding-right: 20px; vertical-align: text-top;">
 The VS solution should look something like this. To set up the the launcher for your project, take a look in the LauncherSettings.cs file. This file contains branding options such as the target application name, your company or organization name and website URLs. <br>
 Technical settings such as target executable, update hosts, application ID and more are also found in this file. 
 <br>Make sure to remember the AppID you choose, it should be unique (a GUID is allowed), as this will be required to set up the version publisher.
@@ -33,8 +33,8 @@ By default the launcher contains a English.txt locale file under the Locale fold
 After you have created the updater you will need to set up one or more update hosts by publishing an initial version. To do this, run the Version Publisher included in the VS solution. 
 
 
-<table width="100%"><tbody><tr><td width="50%" style="padding-right: 20px; vertical-align: text-top;">
-<img src="https://dl.dropboxusercontent.com/u/35774053/Markdowntest/img2.png" alt="Version publisher new project dialog" width="475px"/>
+<table width="100%"><tbody><tr><td class="block" style="padding-right: 20px; vertical-align: text-top;">
+<img src="https://dl.dropboxusercontent.com/u/35774053/Markdowntest/img2.png" alt="Version publisher new project dialog" width="300px"/>
 </td><td style="width:50%; padding-right: 20px; vertical-align: text-top;">
 Start the Version Publisher and click the "New project" button on the main page.<br>
 Choose a project name, enter the appid you chose for the updater, and select a project folder. The project folder is where you will keep the most recent version of the application. The publisher will automatically generate updates from the difference between the last version and the current state of the files in this folder. <br>
@@ -44,8 +44,8 @@ Select a publishing channel and press Create.
 <table width="100%"><tbody><tr><td style="width:50%; padding-right: 20px; vertical-align: text-top;">
 Add the files of the initial version of your program to the project folder. Note that you need to include the updater/installer in this folder to add it to the installation. (for uninstallation/updating purposes)<br><br>
 When your version is ready, press the "Create new update" button. A list of files that will be included in the version should be shown on the right. Press the "Create update from changes..." button to go to the next step. Add a summary and some notes and finally click "Publish update" to publish your first update. Make sure the update is available on the update hosts specified in the updater.
-</td><td style="width:50%; padding-right: 20px; vertical-align: text-top;">
-<img src="https://dl.dropboxusercontent.com/u/35774053/Markdowntest/img3.png" alt="Update file changes" width="475px"/>
+</td><td class="block" style="padding-right: 20px; vertical-align: text-top;">
+<img src="https://dl.dropboxusercontent.com/u/35774053/Markdowntest/img3.png" alt="Update file changes" width="300px"/>
 </td></tr></tbody></table><br>
 
 ###Done!###
