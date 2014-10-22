@@ -33,6 +33,7 @@
             this.cancelButton = new MetroFramework.Controls.MetroButton();
             this.installButton = new MetroFramework.Controls.MetroButton();
             this.optionsButton = new MetroFramework.Controls.MetroButton();
+            this.languageComboBox = new MetroFramework.Controls.MetroComboBox();
             this.SuspendLayout();
             // 
             // infoLabel
@@ -74,11 +75,24 @@
             this.optionsButton.UseSelectable = true;
             this.optionsButton.Click += new System.EventHandler(this.optionsButton_Click);
             // 
+            // languageComboBox
+            // 
+            this.languageComboBox.FormattingEnabled = true;
+            this.languageComboBox.ItemHeight = 23;
+            this.languageComboBox.Location = new System.Drawing.Point(29, 175);
+            this.languageComboBox.Margin = new System.Windows.Forms.Padding(9, 16, 3, 3);
+            this.languageComboBox.Name = "languageComboBox";
+            this.languageComboBox.Size = new System.Drawing.Size(134, 29);
+            this.languageComboBox.TabIndex = 6;
+            this.languageComboBox.UseSelectable = true;
+            this.languageComboBox.SelectedIndexChanged += new System.EventHandler(this.languageComboBox_SelectedIndexChanged);
+            // 
             // InstallForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(473, 330);
+            this.Controls.Add(this.languageComboBox);
             this.Controls.Add(this.optionsButton);
             this.Controls.Add(this.installButton);
             this.Controls.Add(this.cancelButton);
@@ -98,5 +112,6 @@
         private MetroFramework.Controls.MetroButton cancelButton;
         private MetroFramework.Controls.MetroButton installButton;
         private MetroFramework.Controls.MetroButton optionsButton;
+        private MetroFramework.Controls.MetroComboBox languageComboBox;
     }
 }

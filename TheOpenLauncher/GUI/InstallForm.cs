@@ -18,11 +18,26 @@ namespace TheOpenLauncher
         {
             InitializeComponent();
 
+            foreach (string cur in LauncherLocale.AvailableLocales) {
+                this.languageComboBox.Items.Add(cur);
+                if(cur.Equals(LauncherLocale.Current.localeName)){
+                    languageComboBox.SelectedIndex = languageComboBox.Items.Count - 1;
+                }
+            }
+            UpdateLocalizedText();
+        }
+
+        public void UpdateLocalizedText() {
             this.Text = LauncherLocale.Current.Get("Installer.Title");
             infoLabel.Text = LauncherLocale.Current.Get("Installer.IntroInfo");
             optionsButton.Text = LauncherLocale.Current.Get("Installer.OptionsButton");
             installButton.Text = LauncherLocale.Current.Get("Installer.InstallButton");
             cancelButton.Text = LauncherLocale.Current.Get("Installer.CancelButton");
+        }
+
+        private void languageComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            LauncherLocale.Current = LauncherLocale.LoadLocale(LauncherLocale.AvailableLocales[languageComboBox.SelectedIndex]);
+            UpdateLocalizedText();
         }
 
         private void optionsButton_Click(object sender, EventArgs e)

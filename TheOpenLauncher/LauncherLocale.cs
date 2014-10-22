@@ -10,17 +10,46 @@ namespace TheOpenLauncher {
     //Make sure to set the build action for included locale files to "Embedded Resource"
 
     public class LauncherLocale {
-        public static LauncherLocale Current = LoadLocale("English");
-
-        public static LauncherLocale LoadLocale(string localeFilename) {
-            string localePath = "TheOpenLauncher.Locale." + localeFilename + ".txt";
-            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(localePath))
-            using (StreamReader reader = new StreamReader(stream)) {
-                return LoadLocaleFromData(reader.ReadToEnd());
+        private static string localeFolderPrefix = "TheOpenLauncher.Locale.";
+        private static LauncherLocale current = null;
+        private static string[] availableLocales = null;
+        public static LauncherLocale Current {
+            get {
+                if(current == null){
+                    current = LoadLocale("English");
+                }
+                return current;
+            }
+            set {
+                current = value;
             }
         }
 
-        public static LauncherLocale LoadLocaleFromData(string localeData) {
+        public static string[] AvailableLocales {
+            get {
+                if (availableLocales == null) {
+                    availableLocales = Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(name => name.StartsWith(localeFolderPrefix) && name.EndsWith(".txt")).ToArray();
+                    for (int i = 0; i < availableLocales.Length; i++) {
+                        string cur = availableLocales[i];
+                        cur = cur.Substring(0, cur.LastIndexOf(".txt"));
+                        int lastSeperator = cur.LastIndexOf('.');
+                        cur = cur.Substring(lastSeperator + 1, cur.Length - lastSeperator - 1);
+                        availableLocales[i] = cur;
+                    }
+                }
+                return availableLocales;
+            }
+        }
+
+        public static LauncherLocale LoadLocale(string localeFilename) {
+            string localePath = localeFolderPrefix + localeFilename + ".txt";
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(localePath))
+            using (StreamReader reader = new StreamReader(stream)) {
+                return LoadLocaleFromData(localeFilename, reader.ReadToEnd());
+            }
+        }
+
+        public static LauncherLocale LoadLocaleFromData(string name, string localeData) {
             Dictionary<string, string> values = new Dictionary<string,string>();
             string[] entries = localeData.Split(new string[]{Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < entries.Length; i++) {
@@ -36,7 +65,7 @@ namespace TheOpenLauncher {
                 values.Add(key, value);
                 i = i + linesRead;
             }
-            return new LauncherLocale(values);
+            return new LauncherLocale(name, values);
         }
 
         private static string ParseValue(string[] entries, int i, string valuePart, out int linesRead){
@@ -64,7 +93,10 @@ namespace TheOpenLauncher {
         }
 
         private Dictionary<string, string> values;
-        public LauncherLocale(Dictionary<string, string> values) {
+        public string localeName;
+
+        public LauncherLocale(string name, Dictionary<string, string> values) {
+            this.localeName = name;
             this.values = values;
         }
 
