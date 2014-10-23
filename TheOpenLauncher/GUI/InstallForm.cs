@@ -68,8 +68,8 @@ namespace TheOpenLauncher
             Installer installer = new Installer();
             try
             {
-                installer.InstallApplication();
-                this.Close();
+                this.Hide();
+                installer.InstallApplication(() => { this.Invoke((Action)(() => { this.Close(); })); });
             } catch (UnauthorizedAccessException) {
                 Program.RequestElevation();
             } catch (Exception ex) {

@@ -59,7 +59,7 @@ namespace TheOpenLauncher
             IWshShortcut appShortcut = (IWshShortcut)shell.CreateShortcut(appShortcutLocation);
             appShortcut.Description = "Launch " + LauncherSettings.ApplicationName;
             appShortcut.TargetPath = pathToExe;
-            appShortcut.Save(); 
+            appShortcut.Save();
         }
 
         public void CreateStartMenuEntry(){
@@ -70,35 +70,36 @@ namespace TheOpenLauncher
                 Directory.CreateDirectory(appStartMenuPath);
 
             WshShell shell = new WshShell();
-            
+
             //Application/updater shortcut
             string pathToExe = InstallationSettings.InstallationFolder + "/" + LauncherSettings.UpdaterExecutable;
             string appShortcutLocation = Path.Combine(appStartMenuPath, LauncherSettings.ApplicationName + ".lnk");
             IWshShortcut appShortcut = (IWshShortcut)shell.CreateShortcut(appShortcutLocation);
             appShortcut.Description = "Launch " + LauncherSettings.ApplicationName;
             appShortcut.TargetPath = pathToExe;
-            appShortcut.Save(); 
+            appShortcut.Save();
 
             //uninstaller shortcut
             string pathToUninstaller = InstallationSettings.InstallationFolder + "/" + LauncherSettings.UpdaterExecutable;
-            string uninstallShortcutLocation = Path.Combine(appStartMenuPath, "Uninstall "+LauncherSettings.ApplicationName + ".lnk");
+            string uninstallShortcutLocation = Path.Combine(appStartMenuPath, "Uninstall " + LauncherSettings.ApplicationName + ".lnk");
             IWshShortcut uninstallerShortcut = (IWshShortcut)shell.CreateShortcut(uninstallShortcutLocation);
             uninstallerShortcut.Description = "Uninstall " + LauncherSettings.ApplicationName;
             uninstallerShortcut.Arguments = "-uninstall";
             uninstallerShortcut.TargetPath = pathToUninstaller;
-            uninstallerShortcut.Save(); 
+            uninstallerShortcut.Save();
 
             //website shortcut
-            if (LauncherSettings.InfoURL != null){
+            if (LauncherSettings.InfoURL != null) {
                 string webShortcutLocation = Path.Combine(appStartMenuPath, LauncherSettings.ApplicationName + " online info.lnk");
                 IWshShortcut webShortcut = (IWshShortcut)shell.CreateShortcut(webShortcutLocation);
                 webShortcut.Description = "View online info about " + LauncherSettings.ApplicationName;
                 webShortcut.TargetPath = LauncherSettings.InfoURL;
-                webShortcut.Save(); 
+                webShortcut.Save();
             }
         }
 
-        public void RemoveStartMenuEntry(){
+        public void RemoveStartMenuEntry()
+        {
             string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
             string appStartMenuPath = Path.Combine(Path.Combine(startMenuPath, "Programs"), LauncherSettings.ApplicationName);
             if (!Directory.Exists(appStartMenuPath)) { return; }
@@ -121,7 +122,8 @@ namespace TheOpenLauncher
             }
         }
 
-        public void InstallApplication() {
+        public void InstallApplication(Action finishCallback)
+        {
             if (!Directory.Exists(InstallationSettings.InstallationFolder)) {
                 Directory.CreateDirectory(InstallationSettings.InstallationFolder);
             }
@@ -145,7 +147,6 @@ namespace TheOpenLauncher
                         }
                         progressWindow.SetProgress(20, "Applying updates");
                         updater.ApplyUpdate(appInfo, updateInfo, updateHost);
-
                         progressWindow.SetProgress(90, "Registering installation");
                         try {
                             CreateUninstallRegistryEntry();
@@ -164,10 +165,11 @@ namespace TheOpenLauncher
                                 );
                         }
 
-                        progressWindow.Invoke((Action)(() => { progressWindow.Hide(); }));
+                        progressWindow.Invoke((Action)(() => { progressWindow.Close(); }));
+
                         InstallationFinishedForm finishedForm = new InstallationFinishedForm();
                         finishedForm.ShowDialog();
-                        progressWindow.Invoke((Action)(() => { progressWindow.Close(); }));
+                        finishCallback.Invoke();
                     });
                     Thread updateThread = new Thread(new ThreadStart(startUpdate));
                     updateThread.Name = "Update thread";
@@ -175,10 +177,11 @@ namespace TheOpenLauncher
                     updateThread.Start();
                 });
             });
-            progressWindow.ShowDialog();
+            progressWindow.Show();
         }
 
-        private string[] DeleteFiles() {
+        private string[] DeleteFiles()
+        {
             FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
             List<string> failedToRemove = new List<string>();
             string[] filesSortedByDepth = index.files.OrderByDescending(path => path.Split(new Char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Length).ToArray();
@@ -205,7 +208,8 @@ namespace TheOpenLauncher
             return failedToRemove.ToArray();
         }
 
-        private void ScheduleFileRemovals(string[] files) {
+        private void ScheduleFileRemovals(string[] files)
+        {
             string taskGUID = Guid.NewGuid().ToString();
 
             string cleanupFile = InstallationSettings.InstallationFolder + "/Cleanup.bat";
@@ -213,12 +217,12 @@ namespace TheOpenLauncher
             cmds.AppendLine("@echo off");
             cmds.AppendLine("@title Removing installation leftovers");
             cmds.AppendLine("echo Removing installation leftovers...");
-            foreach(string file in files){
+            foreach (string file in files) {
                 cmds.AppendLine("del /F /S /Q /A \"" + file + "\"");
             }
             cmds.AppendLine(@"reg Delete HKCU\Software\Microsoft\Windows\CurrentVersion\Run /f /v " + taskGUID);
-            cmds.AppendLine("del /F /S /Q /A \""+cleanupFile+"\"");
-            
+            cmds.AppendLine("del /F /S /Q /A \"" + cleanupFile + "\"");
+
             System.IO.File.WriteAllText(cleanupFile, cmds.ToString());
 
             RegistryKey registryKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
@@ -226,17 +230,18 @@ namespace TheOpenLauncher
             registryKey.Close();
         }
 
-        public void UninstallApplication() {
+        public void UninstallApplication()
+        {
             if (!Directory.Exists(InstallationSettings.InstallationFolder)) {
                 throw new Exception("Application folder does not exist.");
             }
 
-            if(!System.IO.File.Exists(InstallationSettings.InstallationFolder + "/UpdateIndex.dat")){
+            if (!System.IO.File.Exists(InstallationSettings.InstallationFolder + "/UpdateIndex.dat")) {
                 throw new Exception("Application update index does not exist.");
             }
 
             string[] files = DeleteFiles();
-            if(files.Length > 0){
+            if (files.Length > 0) {
                 ScheduleFileRemovals(files);
             }
 
@@ -244,7 +249,8 @@ namespace TheOpenLauncher
             RemoveUninstallRegistryEntry();
         }
 
-        public static void SetInstallationFolder(string folder) {
+        public static void SetInstallationFolder(string folder)
+        {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
@@ -252,12 +258,13 @@ namespace TheOpenLauncher
             key.SetValue("InstallationFolder", folder);
         }
 
-        public static string GetInstallationFolder() {
+        public static string GetInstallationFolder()
+        {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
             Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\" + name);
-            if(key != null){
+            if (key != null) {
                 return (string)key.GetValue("InstallationFolder");
             }
             return null;
