@@ -18,12 +18,17 @@ To create the updater, you will first need to get a copy of the source code. Sim
 
 
 <table style="width:100%"><tbody><tr><td class="block" style="padding-right: 20px; vertical-align: text-top;">
+####Branding and updater essentials####
 The VS solution should look something like this. To set up the the launcher for your project, take a look in the LauncherSettings.cs file. This file contains branding options such as the target application name, your company or organization name and website URLs. <br>
 Technical settings such as target executable, update hosts, application ID and more are also found in this file. 
 <br>Make sure to remember the AppID you choose, it should be unique (a GUID is allowed), as this will be required to set up the version publisher.
-<br><br>
+
+####Languages####
 By default the launcher contains a English.txt locale file under the Locale folder. Should you wish to add another language, simply create another .txt file in the Locale folder in the same format as the English default. The language will automatically be added to the list of available installer languages.
 <br>More detailed customizations are also possible since all the updater source code is in the solution.
+
+####Build setup####
+At this point the updater is fully functional, however the installer consists of 5 files. To reduce this to 1 exe, we need to embed the libraries in the EXE. All the code for this is already implemented, you just need to copy the 4 libraries to the EmbeddedLibs folder in the VS project folder. You should include Newtonsoft.Json.dll, MetroFramework.Fonts.dll, MetroFramework.dll and Interop.IWshRuntimeLibrary.dll. Make sure they are marked as "Embedded Resource" in Visual Studio and you should be able to run the exe without having libraries in the exe folder. 
 <br><br>When you have finished customizing the installer, build it and obtain a copy from the Release folder.
 </td><td>
 <img src="https://dl.dropboxusercontent.com/u/35774053/TheOpenLauncher/img1.png" alt="Project page"/>
@@ -41,12 +46,14 @@ Choose a project name, enter the appid you chose for the updater, and select a p
 Select a publishing channel and press Create.
 </td></tr></tbody></table><br>
 
-<table width="100%"><tbody><tr><td style="width:50%; padding-right: 20px; vertical-align: text-top;">
+<table width="100%"><tbody>
+<tr><td style="width:50%; padding-right: 20px; vertical-align: text-top;">
 Add the files of the initial version of your program to the project folder. Note that you need to include the updater/installer in this folder to add it to the installation. (for uninstallation/updating purposes)<br><br>
 When your version is ready, press the "Create new update" button. A list of files that will be included in the version should be shown on the right. Press the "Create update from changes..." button to go to the next step. Add a summary and some notes and finally click "Publish update" to publish your first update. Make sure the update is available on the update hosts specified in the updater.
 </td><td class="block" style="padding-right: 20px; vertical-align: text-top;">
 <img src="https://dl.dropboxusercontent.com/u/35774053/TheOpenLauncher/img3.png" alt="Update file changes" width="300px"/>
-</td></tr></tbody></table><br>
+</td></tr>
+</tbody></table><br>
 
 ###Done!###
 You are now ready to distribute your installer! <br>
