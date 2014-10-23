@@ -110,6 +110,10 @@ namespace TheOpenLauncher
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
+        static Program() {
+            DependenciesLoader.Init();
+        }
+
         [STAThread]
         static void Main(String[] args)
         {
