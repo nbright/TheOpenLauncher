@@ -51,7 +51,7 @@ namespace TheOpenLauncher {
 
         public static LauncherLocale LoadLocaleFromData(string name, string localeData) {
             Dictionary<string, string> values = new Dictionary<string,string>();
-            string[] entries = localeData.Split(new string[]{Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+            string[] entries = localeData.Split(new string[]{Environment.NewLine, "\n"}, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < entries.Length; i++) {
                 string cur = entries[i];
                 if (cur.StartsWith("#")) {
