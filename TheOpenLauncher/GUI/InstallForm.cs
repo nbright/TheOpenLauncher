@@ -18,12 +18,17 @@ namespace TheOpenLauncher
         {
             InitializeComponent();
 
-            foreach (string cur in LauncherLocale.AvailableLocales) {
-                this.languageComboBox.Items.Add(cur);
-                if(cur.Equals(LauncherLocale.Current.localeName)){
-                    languageComboBox.SelectedIndex = languageComboBox.Items.Count - 1;
+            if (LauncherLocale.AvailableLocales.Length > 1) {
+                foreach (string cur in LauncherLocale.AvailableLocales) {
+                    this.languageComboBox.Items.Add(cur);
+                    if (cur.Equals(LauncherLocale.Current.localeName)) {
+                        languageComboBox.SelectedIndex = languageComboBox.Items.Count - 1;
+                    }
                 }
+            } else {
+                languageComboBox.Visible = false;
             }
+            
             UpdateLocalizedText();
         }
 
