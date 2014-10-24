@@ -9,12 +9,9 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace TheOpenLauncher
-{
-    class Installer
-    {
-        public void CreateUninstallRegistryEntry()
-        {
+namespace TheOpenLauncher {
+    class Installer {
+        public void CreateUninstallRegistryEntry() {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
@@ -49,8 +46,7 @@ namespace TheOpenLauncher
             }
         }
 
-        public void CreateDesktopShortcut()
-        {
+        public void CreateDesktopShortcut() {
             string pathToExe = InstallationSettings.InstallationFolder + "/" + LauncherSettings.UpdaterExecutable; //
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
@@ -62,7 +58,7 @@ namespace TheOpenLauncher
             appShortcut.Save();
         }
 
-        public void CreateStartMenuEntry(){
+        public void CreateStartMenuEntry() {
             string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
             string appStartMenuPath = Path.Combine(Path.Combine(startMenuPath, "Programs"), LauncherSettings.ApplicationName);
 
@@ -98,8 +94,7 @@ namespace TheOpenLauncher
             }
         }
 
-        public void RemoveStartMenuEntry()
-        {
+        public void RemoveStartMenuEntry() {
             string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
             string appStartMenuPath = Path.Combine(Path.Combine(startMenuPath, "Programs"), LauncherSettings.ApplicationName);
             if (!Directory.Exists(appStartMenuPath)) { return; }
@@ -122,8 +117,7 @@ namespace TheOpenLauncher
             }
         }
 
-        public void InstallApplication(Action finishCallback)
-        {
+        public void InstallApplication(Action finishCallback) {
             if (!Directory.Exists(InstallationSettings.InstallationFolder)) {
                 Directory.CreateDirectory(InstallationSettings.InstallationFolder);
             }
@@ -180,8 +174,7 @@ namespace TheOpenLauncher
             progressWindow.Show();
         }
 
-        private string[] DeleteFiles()
-        {
+        private string[] DeleteFiles() {
             FileIndex index = FileIndex.Deserialize(InstallationSettings.InstallationFolder + "/UpdateIndex.dat");
             List<string> failedToRemove = new List<string>();
             string[] filesSortedByDepth = index.files.OrderByDescending(path => path.Split(new Char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Length).ToArray();
@@ -208,8 +201,7 @@ namespace TheOpenLauncher
             return failedToRemove.ToArray();
         }
 
-        private void ScheduleFileRemovals(string[] files)
-        {
+        private void ScheduleFileRemovals(string[] files) {
             string taskGUID = Guid.NewGuid().ToString();
 
             string cleanupFile = InstallationSettings.InstallationFolder + "/Cleanup.bat";
@@ -230,8 +222,7 @@ namespace TheOpenLauncher
             registryKey.Close();
         }
 
-        public void UninstallApplication()
-        {
+        public void UninstallApplication() {
             if (!Directory.Exists(InstallationSettings.InstallationFolder)) {
                 throw new Exception("Application folder does not exist.");
             }
@@ -249,8 +240,7 @@ namespace TheOpenLauncher
             RemoveUninstallRegistryEntry();
         }
 
-        public static void SetInstallationFolder(string folder)
-        {
+        public static void SetInstallationFolder(string folder) {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
@@ -258,8 +248,7 @@ namespace TheOpenLauncher
             key.SetValue("InstallationFolder", folder);
         }
 
-        public static string GetInstallationFolder()
-        {
+        public static string GetInstallationFolder() {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 
@@ -270,8 +259,7 @@ namespace TheOpenLauncher
             return null;
         }
 
-        public static bool IsInstalled()
-        {
+        public static bool IsInstalled() {
             string name = LauncherSettings.ApplicationName;
             name.Replace('\\', '/');
 

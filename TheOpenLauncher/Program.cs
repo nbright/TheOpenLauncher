@@ -182,7 +182,11 @@ namespace TheOpenLauncher
 
         public static void LaunchTargetApplication(IWin32Window owner) {
             try{
-                Process.Start(InstallationSettings.InstallationFolder + "/" + LauncherSettings.TargetExecutable);
+                ProcessStartInfo proc = new ProcessStartInfo();
+                proc.UseShellExecute = true;
+                proc.WorkingDirectory = InstallationSettings.InstallationFolder;
+                proc.FileName = InstallationSettings.InstallationFolder + "/" + LauncherSettings.TargetExecutable;
+                Process.Start(proc);
             }catch(FileNotFoundException ex){
                 MessageBox.Show(owner, "Could not start application: " + ex.FileName + " is missing.", "Failed to start " + LauncherSettings.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }catch(Win32Exception ex){
