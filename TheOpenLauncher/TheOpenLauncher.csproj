@@ -57,6 +57,7 @@
     <Reference Include="MetroFramework, Version=1.3.0.0, Culture=neutral, PublicKeyToken=5f91a84759bf584a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MetroModernUI.1.3.0.0\lib\net\MetroFramework.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MetroFramework.Design">
       <HintPath>..\packages\MetroModernUI.1.3.0.0\lib\net\MetroFramework.Design.dll</HintPath>
@@ -64,9 +65,11 @@
     </Reference>
     <Reference Include="MetroFramework.Fonts">
       <HintPath>..\packages\MetroModernUI.1.3.0.0\lib\net\MetroFramework.Fonts.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.5\lib\net20\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -77,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DateTools.cs" />
+    <Compile Include="DependencyLoader.cs" />
     <Compile Include="FileHasher.cs" />
     <Compile Include="GUI\FolderSelectDialog.cs" />
     <Compile Include="GUI\UninstallForm.cs">
@@ -189,7 +193,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="EmbeddedLibs\MetroFramework.dll" />
+    <EmbeddedResource Include="EmbeddedLibs\MetroFramework.Fonts.dll" />
     <EmbeddedResource Include="Locale\English.txt" />
+    <EmbeddedResource Include="EmbeddedLibs\Newtonsoft.Json.dll" />
+    <EmbeddedResource Include="EmbeddedLibs\Interop.IWshRuntimeLibrary.dll" />
     <Content Include="logo.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -201,6 +209,7 @@
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
+      <Private>False</Private>
     </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

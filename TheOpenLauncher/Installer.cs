@@ -20,11 +20,13 @@ namespace TheOpenLauncher {
                 uninstallKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
             }
 
+            string installationFolder = new FileInfo(InstallationSettings.InstallationFolder).FullName;
             using (RegistryKey key = uninstallKey.CreateSubKey(name)) {
                 key.SetValue("DisplayName", LauncherSettings.ApplicationName);
-                string uninstallStr = '"' + InstallationSettings.InstallationFolder + "/" + LauncherSettings.UpdaterExecutable + '"' + " -uninstall";
+                key.SetValue("DisplayIcon", installationFolder + "\\" + LauncherSettings.UpdaterExecutable);
+                string uninstallStr = '"' + installationFolder + "\\" + LauncherSettings.UpdaterExecutable + '"' + " -uninstall";
                 key.SetValue("UninstallString", uninstallStr);
-                key.SetValue("InstallLocation", InstallationSettings.InstallationFolder);
+                key.SetValue("InstallLocation", installationFolder);
                 key.SetValue("Publisher", LauncherSettings.CompanyName);
                 if (!String.IsNullOrEmpty(LauncherSettings.InfoURL)) { key.SetValue("URLInfoAbout", LauncherSettings.InfoURL); }
                 if (!String.IsNullOrEmpty(LauncherSettings.HelpURL)) { key.SetValue("HelpLink", LauncherSettings.InfoURL); }
@@ -120,6 +122,16 @@ namespace TheOpenLauncher {
         public void InstallApplication(Action finishCallback) {
             if (!Directory.Exists(InstallationSettings.InstallationFolder)) {
                 Directory.CreateDirectory(InstallationSettings.InstallationFolder);
+            }
+
+            string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
+            if (System.IO.File.Exists(lockFile)) {
+                string message = "The chosen installation folder contains updater files. Installing in this folder may corrupt previous installations. Force installation?";
+                if (MessageBox.Show(null, message, "Folder contains updater traces", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == System.Windows.Forms.DialogResult.Yes) {
+                    System.IO.File.Delete(lockFile);
+                } else {
+                    Application.Exit();
+                }
             }
 
             FileIndex newIndex = new FileIndex(LauncherSettings.AppID);

@@ -27,11 +27,19 @@ namespace TheOpenLauncher
             bool folderIsReady = true;
             
             string lockFile = InstallationSettings.InstallationFolder + "/Updater.lock";
-            if(File.Exists(lockFile) && !File.ReadAllText(lockFile).Contains("Incomplete")){
-                if (MessageBox.Show(this, "Another updater instance has locked the application directory. Force update?", "Updater already running", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Yes) {
-                    File.Delete(lockFile);
+            if(File.Exists(lockFile)){
+                if(File.ReadAllText(lockFile).Contains("Incomplete")){
+                    if (MessageBox.Show(this, "The updater was closed before the update finished. Force update restart?", "Updater was closed", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Yes) {
+                        File.Delete(lockFile);
+                    } else {
+                        folderIsReady = false;
+                    }
                 } else {
-                    folderIsReady = false;
+                    if (MessageBox.Show(this, "Another updater instance has locked the application directory. Force update?", "Updater already running", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Yes) {
+                        File.Delete(lockFile);
+                    } else {
+                        folderIsReady = false;
+                    }
                 }
             }
 
@@ -62,6 +70,14 @@ namespace TheOpenLauncher
                     {
                         if (MessageBox.Show(this, "Cannot check for updates: No valid update mirrors online. Launch application anyway?", "Failed to check for updates", MessageBoxButtons.YesNo, MessageBoxIcon.Warning).Equals(DialogResult.Yes))
                         {
+                            Program.LaunchTargetApplication(this);
+                        }
+                        this.Close();
+                        return;
+                    }
+
+                    if (!File.Exists(InstallationSettings.InstallationFolder + "/UpdateIndex.dat")) {
+                        if (MessageBox.Show(this, "The installation seems to be corrupt: UpdateIndex.dat is missing. Launch application anyway?", "Failed to check for updates", MessageBoxButtons.YesNo, MessageBoxIcon.Error).Equals(DialogResult.Yes)) {
                             Program.LaunchTargetApplication(this);
                         }
                         this.Close();

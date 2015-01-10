@@ -119,6 +119,7 @@ namespace TheOpenLauncher
         {
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += Application_ThreadException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             ParseArguments(args);
 
@@ -164,8 +165,15 @@ namespace TheOpenLauncher
             }
         }
 
-        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
-        {
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
+            OnUncaughtException(e.ExceptionObject.ToString());
+        }
+
+        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e) {
+            OnUncaughtException(e.Exception.ToString());
+        }
+
+        private static void OnUncaughtException(string exStr) {
             string executableName = Path.GetFileName(System.Reflection.Assembly.GetEntryAssembly().Location);
             string log = "launcher_crashlog.txt";
 
@@ -173,7 +181,7 @@ namespace TheOpenLauncher
             builder.AppendLine("--------------------------------");
             builder.Append("Crash of ").Append(executableName).Append(" at ").AppendFormat("{0:yyyy-MM-dd hh-mm-ss}", DateTime.Now).AppendLine();
             builder.AppendLine("Exception message: ");
-            builder.AppendLine(e.Exception.ToString());
+            builder.AppendLine(exStr);
             builder.AppendLine("--------------------------------").AppendLine();
             File.AppendAllText(log, builder.ToString());
 

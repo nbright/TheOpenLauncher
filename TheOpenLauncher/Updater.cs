@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using TheOpenLauncher.Properties;
 using System.Linq;
 using System.Threading;
+using System.Security.AccessControl;
 
 namespace TheOpenLauncher {
     public class Updater {
@@ -47,6 +48,7 @@ namespace TheOpenLauncher {
             TaskType type;
             Uri remoteFile;
             string localFile;
+            public List<string> filesToDeleteOnExit = new List<string>();
 
             public UpdateTask(TaskType type, string localFile) : this(type, null, localFile) { }
             public UpdateTask(TaskType type, Uri remoteFile, string localFile) {
@@ -57,7 +59,17 @@ namespace TheOpenLauncher {
 
             public void Run() {
                 if (TaskType.DeleteFile.Equals(type)) {
-                    File.Delete(localFile);
+                    if (File.Exists(localFile)) {
+                        try {
+                            File.Delete(localFile);
+                        } catch (UnauthorizedAccessException) {
+                            if (File.Exists(localFile + "_DELETE")) {
+                                File.Delete(localFile + "_DELETE");
+                            }
+                            File.Move(localFile, localFile + "_DELETE");
+                            filesToDeleteOnExit.Add(localFile + "_DELETE");
+                        }
+                    }
                 } else if (TaskType.DownloadNewFile.Equals(type) || TaskType.DownloadReplacementFile.Equals(type)) { //Might want to disable replacing for non existant files
                     DownloadFile(remoteFile, localFile);
                 }
@@ -68,7 +80,15 @@ namespace TheOpenLauncher {
                     Directory.GetParent(targetFile).Create();
                 }
                 if (File.Exists(targetFile)) {
-                    File.Delete(targetFile);
+                    try {
+                        File.Delete(localFile);
+                    } catch (UnauthorizedAccessException) {
+                        if (File.Exists(localFile + "_DELETE")) {
+                            File.Delete(localFile + "_DELETE");
+                        }
+                        File.Move(localFile, localFile + "_DELETE");
+                        filesToDeleteOnExit.Add(localFile + "_DELETE");
+                    }
                 }
 
                 try {
@@ -160,6 +180,7 @@ namespace TheOpenLauncher {
         }
         private List<UpdateTask> RunTasks(UpdateTask[] tasks, bool multithreadedTaskRunning, int maxParallelTasks) {
             List<UpdateTask> failedTasks = new List<UpdateTask>();
+            List<string> filesToDelete = new List<string>();
             using (ManualResetEvent resetEvent = new ManualResetEvent(false)) {
                 int tasksToRun = tasks.Length;
                 int tasksActive = 0;
@@ -188,6 +209,8 @@ namespace TheOpenLauncher {
                                         } finally {
                                             if (Interlocked.Decrement(ref tasksToRun) == 0) { resetEvent.Set(); }
                                             Interlocked.Decrement(ref tasksActive);
+
+                                            filesToDelete.AddRange(((UpdateTask)curTask).filesToDeleteOnExit);
                                         }
                                     }
                                 ), curTask
@@ -200,18 +223,26 @@ namespace TheOpenLauncher {
                             }
                         }
                     } else {
-                        resetEvent.Set();
-
                         percentageDone = Convert.ToInt32(((double)(i - failedTasks.Count) / (double)tasks.Length) * 100d);
                         TriggerProgressEvent(percentageDone, curTask.ToString());
                         try {
                             curTask.Run();
                         } catch (Exception ex) {
                             failedTasks.Add(curTask);
+                        } finally {
+                            filesToDelete.AddRange(((UpdateTask)curTask).filesToDeleteOnExit);
+                            resetEvent.Set();
                         }
                     }
                 }
                 resetEvent.WaitOne();
+                foreach(string curFile in filesToDelete){
+                    try {
+                        File.Delete(curFile);
+                    }catch(Exception){
+                        Console.WriteLine("Failed to delete "+curFile);
+                    }
+                }
             }
             return failedTasks;
         }
@@ -238,6 +269,12 @@ namespace TheOpenLauncher {
                     task.Run();
                 } catch (WebException ex) {
                     if (MessageBox.Show("Updater could not download file: " + ex.Message + "\r\n(" + ex.Data["Target"] + ")", "Failed to download file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error).Equals(DialogResult.Retry)) {
+                        i--; //Retry
+                    } else {
+                        Application.Exit();
+                    }
+                } catch (UnauthorizedAccessException ex) {
+                    if (MessageBox.Show("Updater could access file or folder: " + ex.Message + "\r\n(" + ex.Data["Target"] + ")", "Failed to download file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error).Equals(DialogResult.Retry)) {
                         i--; //Retry
                     } else {
                         Application.Exit();
